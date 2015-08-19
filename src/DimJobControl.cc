@@ -1,8 +1,6 @@
 
 #include "DimJobControl.h"
 #include <stdint.h>
-#include "cgicc/CgiDefs.h"
-#include "cgicc/Cgicc.h"
 #include <iostream>
 #include <sstream>
 #include <fcntl.h>
