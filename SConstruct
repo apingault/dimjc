@@ -2,7 +2,6 @@ import sys,os,commands
 import  os
 import re
 import sys
-
 def SWIGSharedLibrary(env, library, sources, **args):
   swigre = re.compile('(.*).i')
   if env.WhereIs('swig') is None:
@@ -139,13 +138,14 @@ djc=env.Program("bin/dimjc.exe",source="src/djc.cxx",LIBPATH=EXE_LIBPATH,LIBS=EX
 
 #Python module
 _dimjc=env.PythonModule('_Ldimjc', ['Ldimjc.i'],LIBPATH="#lib",LIBS="dimjc")
-
-env.Install("./opt/dhcal/lib",dimjc)
-env.Install("./opt/dhcal/bin",[djc])
+env.AddPostAction(_dimjc,Copy("/usr/lib/python2.7/dist-packages/Ldimjc.py","Ldimjc.py"))
+env.Install("/opt/dhcal/lib",dimjc)
+env.Install("/opt/dhcal/bin",[djc])
+env.InstallAs(["/usr/lib/python2.7/dist-packages/_Ldimjc.so"],[_dimjc])
 ###env.Install("/opt/dhcal/lib",dimjc)
 ###env.Install("/opt/dhcal/include/readout",myinc)
 
-env.Alias('install', ["./opt/dhcal/lib","./opt/dhcal/bin"])
-
+env.Alias('install', ["/opt/dhcal/lib","/opt/dhcal/bin","/usr/lib/python2.7/dist-packages"])
+Default([dimjc,djc,_dimjc])
 
 

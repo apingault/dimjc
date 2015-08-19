@@ -1,0 +1,51 @@
+{
+
+    "hosts" :
+    {
+
+	"lyosdhcal10":[
+	    {
+	    "Name":"DIFSERVER",
+		"Arguments" : ["-f /data/NAS/toto.slcio","-c MONCOLLECTOR"],
+	    "Environnement" : [
+		"DIM_DNS_NODE=lyosdhcal10",
+		"LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:/opt/dhcal/lib:/opt/dhcal/DQM4HEP/lib:/opt/dhcal/dim/linux:$LD_LIBRARY_PATH"
+	    ],
+	    "Program" : "/opt/dhcal/bin/dimdif"
+	    },
+	    {
+	    "Name":"DBSERVER",
+	    "Arguments" : [],
+	    "Environnement" : [
+		"DIM_DNS_NODE=lyosdhcal10",
+		"LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:/opt/dhcal/lib:/opt/dhcal/DQM4HEP/lib:/opt/dhcal/dim/linux:$LD_LIBRARY_PATH",
+		"CONFDB=ILC/fFQeV52rQy@(DESCRIPTION_LIST=(LOAD_BALANCE=off)(FAILOVER=on)(DESCRIPTION=(CONNECT_TIMEOUT=5)(TRANSPORT_CONNECT_TIMEOUT=3)(RETRY_COUNT=3)(ADDRESS_LIST=(LOAD_BALANCE=on)(ADDRESS=(PROTOCOL=TCP)(HOST=ccscanovo.in2p3.fr)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=calice.in2p3.fr)))(DESCRIPTION=(CONNECT_TIMEOUT=5)(TRANSPORT_CONNECT_TIMEOUT=3)(RETRY_COUNT=3)(ADDRESS_LIST=(LOAD_BALANCE=on)(ADDRESS=(PROTOCOL=TCP)(HOST=ccscanodgvo.in2p3.fr)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=calice.in2p3.fr))))"
+	    ],
+	    "Program" : "/opt/dhcal/bin/dimdb"
+	    }
+		      ],
+// Test avec 2 programmes
+	"lyosdhcal12":[
+	    // CCC
+	    {
+		"Name":"CCCSERVER",
+		"Arguments" : [],
+		"Environnement" : [
+		    "DIM_DNS_NODE=lyosdhcal10",
+		    "LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:/opt/dhcal/lib:/opt/dhcal/DQM4HEP/lib:/opt/dhcal/dim/linux:$LD_LIBRARY_PATH"
+		],
+		"Program" : "/opt/dhcal/bin/dimccc"
+	    },
+	    // DIF
+	    {
+		"Name":"DIFSERVER",
+		"Arguments" : [],
+		"Environnement" : [
+		    "DIM_DNS_NODE=lyosdhcal10",
+		    "LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:/opt/dhcal/lib:/opt/dhcal/DQM4HEP/lib:/opt/dhcal/dim/linux:$LD_LIBRARY_PATH"
+		],
+		"Program" : "/opt/dhcal/bin/dimdif"
+	    }	       
+	]
+    }
+}
