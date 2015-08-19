@@ -132,7 +132,7 @@ EXE_LIBPATH=LIBRARY_PATHS
 EXE_LIBPATH.append("#lib")
 EXE_LIBS=LIBRARIES
 EXE_LIBS.append("dimjc")
-djc=env.Program("bin/dimjc.exe",source="src/djc.cxx",LIBPATH=EXE_LIBPATH,LIBS=EXE_LIBS)
+djc=env.Program("bin/dimjc_daemon",source="src/djc.cxx",LIBPATH=EXE_LIBPATH,LIBS=EXE_LIBS)
 #dcs=env.Program("bin/dimccc",source="src/dcc.cxx",LIBPATH=EXE_LIBPATH,LIBS=EXE_LIBS)
 #dzups=env.Program("bin/dimzup",source="src/dzup.cxx",LIBPATH=EXE_LIBPATH,LIBS=EXE_LIBS)
 
