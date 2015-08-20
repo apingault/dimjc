@@ -43,6 +43,7 @@ private:
   
   std::vector<Json::Value> _processList;
   std::vector<Json::Value> _jobValue;
+  Json::Value _processArray;
   char _jobbuffer[8192];
   std::vector<DimInfo*> _jobInfo;
   std::vector<std::string> _DJCNames;

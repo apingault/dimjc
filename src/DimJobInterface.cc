@@ -117,6 +117,31 @@ void DimJobInterface::infoHandler()
 	 jsonMessage.assign(curr->getString());
 	 bool parsingSuccessful = reader.parse(jsonMessage,_jobValue[i]);
 
+	 // Fill the process Array
+	 // std::cout<<"Fill process array "<<_jobValue[i]["JOBS"].size()<<std::endl;
+	 // Json::StyledWriter styledWriter;
+	 // std::cout << styledWriter.write(_jobValue[i]);
+	 for (int ip=0;ip<_jobValue[i]["JOBS"].size();ip++)
+	   {
+	     Json::Value pin=_jobValue[i]["JOBS"][ip];
+	     bool found=false;
+	      for (std::vector<Json::Value>::iterator it=_processList.begin();it!=_processList.end();it++)
+		{
+		  //printf("host %s  compare to %s  gives %d \n",host.c_str(),(*it)["host"].asString().c_str(),host.compare((*it)["host"].asString()));
+		  if ( pin["HOST"].asString().compare((*it)["host"].asString())!=0) continue;
+		  if ( pin["NAME"].asString().compare((*it)["Name"].asString())!=0) continue;
+		  found=true;break;
+		}
+	      if (!found)
+		pin["DAQ"]="N";
+	      else
+		pin["DAQ"]="Y";
+	      _processArray.append(pin);
+
+	     
+	   }
+	   
+
        return;
      }
 
@@ -124,10 +149,30 @@ void DimJobInterface::infoHandler()
 
 void DimJobInterface::List()
 {
+  // this->status();
+  // usleep(500000);
+  /*
   Json::StyledWriter styledWriter;
   for (uint32_t i=0;i<_jobValue.size();i++)
     {
     std::cout << styledWriter.write(_jobValue[i]);
+    }
+  Json::FastWriter fastWriter;
+  */
+  
+  std::cout<<std::setw(6)<<"\e[1m"<<"PID";
+  std::cout<<std::setw(15)<<"NAME";
+  std::cout<<std::setw(25)<<"HOST";
+  std::cout<<std::setw(20)<<"STATUS";
+  std::cout<<std::setw(10)<<"In DAQ"<<"\e[0m"<<std::endl<<std::endl;
+  for (int ip=0;ip<_processArray.size();ip++)
+    {
+      std::cout<<std::setw(6)<<_processArray[ip]["PID"].asString();
+      std::cout<<std::setw(15)<<_processArray[ip]["NAME"].asString();
+      std::cout<<std::setw(25)<<_processArray[ip]["HOST"].asString();
+      std::cout<<std::setw(20)<<_processArray[ip]["STATUS"].asString();
+
+      std::cout<<std::setw(10)<<_processArray[ip]["DAQ"].asString()<<std::endl;
     }
 }
 
@@ -179,10 +224,12 @@ void DimJobInterface::status()
   std::stringstream s0;
   
   s0.str(std::string());
+  // std::cout<<"Clear process array "<<std::endl;
+  _processArray.clear();
 
   for (std::vector<std::string>::iterator its=_DJCNames.begin();its!=_DJCNames.end();its++)
    {
-     std::cout<<"Looking for "<<(*its)<<std::endl;
+     //std::cout<<"Looking for "<<(*its)<<std::endl;
      bool found=false;
      for (std::vector<Json::Value>::iterator it=_processList.begin();it!=_processList.end();it++)
        {
