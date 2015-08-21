@@ -36,8 +36,8 @@ public:
   void clearHostJobs(std::string host);
   void clearAllJobs();
   void status();
-  void killJob(std::string host,uint32_t pid,uint32_t sig);
-
+  void killJob(std::string host,uint32_t pid,uint32_t sig=9);
+  void restartJob(std::string host,std::string name,uint32_t pid, uint32_t sig=9 );
 private:
   Json::Value _root;
   

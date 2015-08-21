@@ -175,7 +175,31 @@ void DimJobInterface::List()
       std::cout<<std::setw(10)<<_processArray[ip]["DAQ"].asString()<<std::endl;
     }
 }
+void DimJobInterface::restartJob(std::string host,std::string name,uint32_t pid, uint32_t sig )
+{
+  std::stringstream s0;
+  
+  s0.str(std::string());
+  this->killJob(host,pid,sig);
+  usleep(500000);
 
+  // Restart the process
+  Json::FastWriter fastWriter;
+  for (std::vector<Json::Value>::iterator it=_processList.begin();it!=_processList.end();it++)
+    {
+
+      if ( host.compare((*it)["host"].asString())!=0) continue;
+      if ( name.compare((*it)["Name"].asString())!=0) continue;
+      s0.str(std::string());
+      s0<<"/DJC/"<<(*it)["host"].asString()<<"/START";
+      std::cout<<s0.str()<<std::endl;
+      std::cout<<fastWriter.write((*it)).c_str()<<std::endl;
+      DimClient::sendCommand(s0.str().c_str(),fastWriter.write((*it)).c_str());
+      break;
+
+    }
+
+}
 void DimJobInterface::startJobs(std::string host)
 {
   std::stringstream s0;
