@@ -38,6 +38,8 @@ public:
   void status();
   void killJob(std::string host,uint32_t pid,uint32_t sig=9);
   void restartJob(std::string host,std::string name,uint32_t pid, uint32_t sig=9 );
+  std::string processStatusList();
+  std::string processJobList();
 private:
   Json::Value _root;
   

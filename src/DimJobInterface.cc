@@ -146,7 +146,17 @@ void DimJobInterface::infoHandler()
      }
 
 }
+std::string DimJobInterface::processJobList()
+{
+   Json::FastWriter fastWriter;
+   return fastWriter.write(_root);
+}
 
+std::string DimJobInterface::processStatusList()
+{
+   Json::FastWriter fastWriter;
+   return fastWriter.write(_processArray);
+}
 void DimJobInterface::List()
 {
   // this->status();
