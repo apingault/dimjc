@@ -13,11 +13,6 @@ using namespace std;
 #include <sstream>
 #include <map>
 #include <vector>
-#include <boost/function.hpp>
-#include <boost/thread.hpp>
-#include <boost/bind.hpp>
-
-#include <boost/interprocess/sync/interprocess_mutex.hpp>
 #include <sys/types.h>
 #include <signal.h>
 #include "json/json.h"
