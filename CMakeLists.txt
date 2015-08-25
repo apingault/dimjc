@@ -53,17 +53,25 @@ INCLUDE_DIRECTORIES( include )
 ADD_DEFINITIONS( "-pedantic -Wunused-value -O2" )
 ADD_DEFINITIONS("-Wno-long-long -Wreturn-type")
 
-FILE (
-        GLOB_RECURSE
-        SRC_FILES
-        src/*.cc
+SET(
+    SRC_FILES
+    src/DimJobControl.cc
+    src/DimJobInterface.cc
 )
 
-ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${SRC_FILES} )
+ADD_SHARED_LIBRARY( dimjc ${SRC_FILES} )
 
 INSTALL( 
-    TARGETS ${PROJECT_NAME}
+    TARGETS dimjc
     LIBRARY DESTINATION lib
+)
+
+ADD_EXECUTABLE( dimjc_daemon src/djc.cxx )
+TARGET_LINK_LIBRARIES( dimjc_daemon dimjc )
+
+INSTALL( 
+    TARGETS dimjc_daemon
+    RUNTIME DESTINATION bin
 )
 
 ###############################
