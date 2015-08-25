@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <cstdlib>
 #include <cstring>
+#include <errno.h>
 
 #include <string.h>
 #include <cstdio>
@@ -219,9 +220,9 @@ void DimJobControl::startProcess(DimProcessData* p)
     }
 
 
-  ret = execve( executivePath, pArgv, pEnvp); 	      
+  ret = execve( executivePath, pArgv, pEnvp);
 
-  INFO_PRINT("jobControl: FATAL OOps, we came back with ret = %i , dying",ret);
+  INFO_PRINT("jobControl: FATAL OOps, we came back with ret = %i , errno = %i , dying",ret, errno);
   exit(-1);
 }
 DimJobControl::DimJobControl() 
