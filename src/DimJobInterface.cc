@@ -100,8 +100,7 @@ void DimJobInterface::loadJSON(std::string fname)
 
     } 
 
-      
-
+      delete dbr;
 }
 
 void DimJobInterface::infoHandler()
@@ -157,6 +156,17 @@ std::string DimJobInterface::processStatusList()
    Json::FastWriter fastWriter;
    return fastWriter.write(_processArray);
 }
+
+const Json::Value &DimJobInterface::getProcessStatusValue() const
+{
+	return _processArray;
+}
+
+const Json::Value &DimJobInterface::getRoot() const
+{
+	return _root;
+}
+
 void DimJobInterface::List()
 {
   // this->status();
