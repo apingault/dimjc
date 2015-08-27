@@ -15,6 +15,7 @@
 #include "json/json.h"
 
 #include <string.h>
+#include <algorithm>
 
 #include <fstream>      // std::ifstream
 
@@ -79,9 +80,14 @@ void DimJobInterface::loadJSON(std::string fname)
   // Get DB service
   cout<<"On rentre dans scandns "<<endl;
   _DJCNames.clear();
+
+  for(unsigned int i=0 ; i<_jobInfo.size() ; i++)
+	  delete _jobInfo.at(i);
+
   _jobInfo.clear();
   _jobValue.clear();
   dbr->getServices("/DJC/*/JOBSTATUS" ); 
+
  while(type = dbr->getNextService(service, format)) 
     { 
       cout << service << " -  " << format << endl; 
@@ -90,7 +96,10 @@ void DimJobInterface::loadJSON(std::string fname)
       size_t n=ss.find("/JOBSTATUS");
       cout<<ss.substr(0,n)<<endl;
       cout<<ss.substr(0,n).substr(5,n-5)<<endl;
-      if(std::find(vjobs.begin(), vjobs.end(),ss.substr(0,n).substr(5,n-5))==vjobs.end()) continue;
+
+      if(std::find(vjobs.begin(), vjobs.end(), ss.substr(0,n).substr(5,n-5) ) == vjobs.end())
+    	  continue;
+
       _DJCNames.push_back(ss.substr(0,n).substr(5,n-5));
       DimInfo* jinf=new DimInfo(service,_jobbuffer,this);
       _jobInfo.push_back(jinf);
@@ -220,6 +229,30 @@ void DimJobInterface::restartJob(std::string host,std::string name,uint32_t pid,
     }
 
 }
+
+void DimJobInterface::startJob(std::string host, std::string name)
+{
+  // Start the process
+  Json::FastWriter fastWriter;
+  for (std::vector<Json::Value>::iterator it=_processList.begin();it!=_processList.end();it++)
+	{
+
+	  if ( host.compare((*it)["host"].asString())!=0) continue;
+	  if ( name.compare((*it)["Name"].asString())!=0) continue;
+
+	  std::stringstream s0;
+	  s0<<"/DJC/"<<(*it)["host"].asString()<<"/START";
+
+	  std::cout<<s0.str()<<std::endl;
+
+	  std::cout<<fastWriter.write((*it)).c_str()<<std::endl;
+	  DimClient::sendCommand(s0.str().c_str(),fastWriter.write((*it)).c_str());
+
+	  break;
+
+	}
+}
+
 void DimJobInterface::startJobs(std::string host)
 {
   std::stringstream s0;

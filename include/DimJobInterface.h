@@ -3,6 +3,7 @@
 #define _DimJobInterface_h
 #include <iostream>
 
+#include <stdint.h>
 #include <string.h>
 #include<stdio.h>
 #include "dis.hxx"
@@ -28,6 +29,7 @@ public:
   void loadJSON(std::string fname);
   void List();
   void startJobs(std::string host);
+  void startJob(std::string host, std::string name);
   void clearHostJobs(std::string host);
   void clearAllJobs();
   void status();
