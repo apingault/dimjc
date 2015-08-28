@@ -11,7 +11,7 @@
 
 FIND_PATH(
     JSONCPP_INCLUDE_DIRS json/json.h
-    PATHS /usr/local/include /usr/include /opt/local/include
+    PATHS ${JSONCPP_DIR}/include /usr/local/include /usr/include /opt/local/include
     PATH_SUFFIXES jsoncpp
 )
 
@@ -26,7 +26,7 @@ EXEC_PROGRAM(
 FIND_LIBRARY (
     JSONCPP_LIBRARY
     NAMES libjsoncpp${CMAKE_SHARED_LIBRARY_SUFFIX}
-    PATHS /usr/lib /usr/local/lib /opt/jsoncpp/lib /opt/local/lib
+    PATHS ${JSONCPP_DIR}/lib /usr/lib /usr/local/lib /opt/jsoncpp/lib /opt/local/lib 
 )
 
 IF (JSONCPP_LIBRARY AND JSONCPP_INCLUDE_DIRS)
