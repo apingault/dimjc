@@ -196,7 +196,7 @@ void DimJobInterface::List()
   std::cout<<std::setw(10)<<"In DAQ"<<"\e[0m"<<std::endl<<std::endl;
   for (int ip=0;ip<_processArray.size();ip++)
     {
-      std::cout<<std::setw(6)<<_processArray[ip]["PID"].asString();
+      std::cout<<std::setw(6)<<_processArray[ip]["PID"].asUInt();
       std::cout<<std::setw(15)<<_processArray[ip]["NAME"].asString();
       std::cout<<std::setw(25)<<_processArray[ip]["HOST"].asString();
       std::cout<<std::setw(20)<<_processArray[ip]["STATUS"].asString();
