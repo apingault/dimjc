@@ -262,7 +262,7 @@ void DimJobControl::startProcess(DimProcessData* pProcessData)
 	if (pProcessData->m_status != DimProcessData::NOT_CREATED)
 		return;
 
-	std::string programName = pProcessData->m_processInfo["PROG"].asString();
+	std::string programName = pProcessData->m_processInfo["PROGRAM"].asString();
 	std::vector<std::string> arguments;
 	std::vector<std::string> environmentVars;
 
