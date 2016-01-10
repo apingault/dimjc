@@ -177,6 +177,7 @@ private:
 	std::vector<DimInfo*>       m_jobInfo;           ///< The list of dim info
 
 	mutable pthread_mutex_t     m_mutex;             ///< The pthread mutex to avoid data rac conditions
+	int                         m_timerPeriod;       ///< The timer period (unit seconds)
 };
 
 

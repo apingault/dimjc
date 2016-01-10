@@ -19,7 +19,8 @@
 
 
 DimJobInterface::DimJobInterface() :
-	DimTimer()
+	DimTimer(),
+	m_timerPeriod(0)
 {
 	pthread_mutex_init(&m_mutex, NULL);
 }
@@ -403,14 +404,15 @@ void DimJobInterface::killJob(const std::string &hostName, uint32_t pid, uint32_
 
 void DimJobInterface::startTimer(int nSeconds)
 {
-	this->start(nSeconds);
+	m_timerPeriod = nSeconds;
+	DimTimer::start(nSeconds);
 }
 
 //-------------------------------------------------------------------------------------------------
 
 void DimJobInterface::stopTimer()
 {
-	this->stop();
+	DimTimer::stop();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -434,5 +436,8 @@ void DimJobInterface::clear()
 void DimJobInterface::timerHandler()
 {
 	this->status();
+
+	// restart the timer
+	this->startTimer(m_timerPeriod);
 }
 
