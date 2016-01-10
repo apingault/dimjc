@@ -35,6 +35,8 @@ DimJobInterface::~DimJobInterface()
 
 void DimJobInterface::loadJSON(const std::string &fileName)
 {
+	this->clear();
+
 	// Parse the file
 	Json::Reader reader;
 	std::ifstream ifs (fileName.c_str(), std::ifstream::in);
@@ -53,8 +55,6 @@ void DimJobInterface::loadJSON(const std::string &fileName)
 
 		return ;
 	}
-
-	this->clear();
 
 	std::vector<std::string> hosts = m_root["HOSTS"].getMemberNames();
 	Json::StyledWriter styledWriter;
