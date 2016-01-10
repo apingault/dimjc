@@ -98,6 +98,7 @@ void DimJobInterface::loadJSON(const std::string &fileName)
 			continue;
 
 		m_djcNames.push_back(host);
+		std::cout << "Host : " << host << std::endl;
 
 		DimInfo *pJobInfo = new DimInfo(service, m_jobbuffer, this);
 		m_jobInfo.push_back(pJobInfo);
