@@ -1,66 +1,136 @@
 #ifndef _DimJobControl_h
-
 #define _DimJobControl_h
-#include <iostream>
 
-#include <string.h>
-#include<stdio.h>
-#include "dis.hxx"
-#include "dic.hxx"
-
-//#include "DIFReadoutConstant.h"
-using namespace std;
-#include <sstream>
-#include <map>
-#include <vector>
+// -- std headers
+#include <stdint.h>
 #include <sys/types.h>
-#include <signal.h>
+#include <map>
+#include <string>
+
+// -- dim headers
+#include <dis.hxx>
+#include <dic.hxx>
+
+// -- json headers
 #include "json/json.h"
 
-#include <string>
-#include <stdint.h>
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 
-
+/**
+ *  @brief  DimProcessData class
+ */
 class DimProcessData
 {
+public:
+	/**
+	 *  @brief  Status enum
+	 */
+	enum Status
+	{
+		NOT_CREATED = 0,
+		RUNNING = 1,
+		KILLED = 2
+	};
 
- public:
-  DimProcessData(std::string json_string);
-  
-  enum {notcreated=0,running=1,killed=2};
-  Json::Value _processInfo;
-  pid_t _childPid;
-  uint32_t _status;
+	/**
+	 *  @brief  Constructor. Construct a process structure from a json string
+	 *          that contains all needed infos on a process
+	 *
+	 *  @param  jsonString the jsonString to initialize the process
+	 */
+	DimProcessData(const std::string &jsonString);
 
+	Json::Value    m_processInfo;     ///< The json process value
+	pid_t          m_childPid;        ///< The process pid
+	Status         m_status;          ///< The process status
 };
 
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+
+/**
+ *  @brief  DimJobControl class
+ */
 class DimJobControl: public DimServer
 {
 public:
-  DimJobControl();
+	/**
+	 *  @brief  Constructor.
+	 *          Allocate commands and services
+	 */
+	DimJobControl();
 
-  ~DimJobControl();
-  virtual void commandHandler();
+	/**
+	 *  @brief  Destructor
+	 */
+	virtual ~DimJobControl();
 
-  void allocateCommands();
-  
-  void startProcess(DimProcessData* p);
-  void killProcess(pid_t pid,uint32_t sig);
+	/**
+	 *  @brief  Kill all processes
+	 */
+	virtual void clear();
 
-  std::string status();
-  std::string log(pid_t pid);
-  void clear();
+	/**
+	 *  @brief  Start a process and register it in the jobs control
+	 *
+	 *  @param  pDimProcessData the process to start
+	 */
+	void startProcess(DimProcessData* pDimProcessData);
+
+	/**
+	 *  @brief  Kill a registered process
+	 *
+	 *  @param  pid the process pid
+	 *  @param  sig the signal to send to the process
+	 */
+	void killProcess(pid_t pid, uint32_t sig);
+
+protected:
+	/**
+	 *  @brief  Dim command handler.
+	 *          Handles commands from clients
+	 */
+	virtual void commandHandler();
+
+	/**
+	 *  @brief  Allocate commands
+	 */
+	virtual void allocateCommands();
 
 private:
-  std::string _hostname;
-  std::map<pid_t,DimProcessData*> _processMap;
-  DimCommand* _startCommand;
-  DimCommand* _clearCommand;
-  DimCommand* _killCommand;
-  DimCommand* _statusCommand;
-  DimCommand* _logCommand;
-  DimService* _jobService;
-  DimService* _logService;
+	/**
+	 *  @brief  Get all the process status
+	 *
+	 *  @return  The process status
+	 */
+	std::string status();
+
+	/**
+	 *  @brief  Get the log of specific process
+	 *
+	 *  @param  pid the process pid
+	 *
+	 *  @return  the process log as string
+	 */
+	std::string log(pid_t pid);
+
+protected:
+
+	typedef std::map<pid_t,DimProcessData*> PidToProcessMap;
+
+	std::string        m_hostname;         ///< The host name on which the job control is running
+	PidToProcessMap    m_processMap;       ///< The handled process map
+
+	DimCommand*        m_pStartCommand;    ///< The start process command
+	DimCommand*        m_pClearCommand;    ///< The clear command for all processes
+	DimCommand*        m_pKillCommand;     ///< The kill command for a specific process
+	DimCommand*        m_pStatusCommand;   ///< The status command for all processes
+	DimCommand*        m_pLogCommand;      ///< The log command for a specific process
+	DimService*        m_pJobService;      ///< The jobs list service for all processes
+	DimService*        m_pLogService;      ///< The log service for a specific process
 };
+
+
 #endif
 
