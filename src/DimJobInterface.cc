@@ -1,343 +1,437 @@
 
 #include "DimJobInterface.h"
+
+// -- std headers
 #include <iostream>
 #include <sstream>
+#include <iomanip>
+#include <cstdlib>
+#include <cstring>
+#include <algorithm>
+#include <fstream>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/dir.h>  
-#include <sys/param.h>  
-#include <iostream>
-#include <iomanip>
-#include <cstdlib>
-#include <cstring>
-#include "json/json.h"
-
+#include <sys/param.h>
 #include <string.h>
-#include <algorithm>
-
-#include <fstream>      // std::ifstream
 
 
-DimJobInterface::DimJobInterface()
+DimJobInterface::DimJobInterface() :
+	DimTimer()
 {
- 
+	pthread_mutex_init(&m_mutex, NULL);
 }
+
+//-------------------------------------------------------------------------------------------------
+
 DimJobInterface::~DimJobInterface()
 {
- 
- 
+	pthread_mutex_destroy(&m_mutex);
 }
 
-void DimJobInterface::loadJSON(std::string fname)
+//-------------------------------------------------------------------------------------------------
+
+void DimJobInterface::loadJSON(const std::string &fileName)
 {
-  // Parse the file
+	// Parse the file
+	Json::Reader reader;
+	std::ifstream ifs (fileName.c_str(), std::ifstream::in);
 
-  Json::Reader reader;
-  std::ifstream ifs (fname.c_str(), std::ifstream::in);
+	// Let's parse it
+	bool parsedSuccess = reader.parse(ifs, m_root, false);
 
- // Let's parse it  
- 
-  bool parsedSuccess = reader.parse(ifs, 
-                                   _root, 
-                                   false);
-  
- if(not parsedSuccess)
-    {
-      // Report failures and their locations 
-      // in the document.
-      std::cout<<"Failed to parse JSON"<<std::endl 
-	  <<reader.getFormatedErrorMessages()
-	       <<std::endl;
-      return ;
-    }
+	if(!parsedSuccess)
+	{
+		// Report failures and their locations
+		// in the document.
+		std::cout << "Failed to parse JSON"
+				  << std::endl
+				  << reader.getFormatedErrorMessages()
+				  << std::endl;
 
- std::vector<std::string> vjobs=_root["hosts"].getMemberNames();
+		return ;
+	}
 
- _processList.clear();
-   Json::StyledWriter styledWriter;
+	this->clear();
 
- for (std::vector<std::string>::iterator it=vjobs.begin();it!=vjobs.end();it++)
-   {
-     Json::Value h=_root["hosts"][(*it)];
-     std::cout<<"============"<<(*it)<<"==========="<<std::endl;
-     for (uint32_t ia=0;ia<h.size();ia++)
-       {
-	 std::cout<<">>>"<<ia<<" >>>> Process"<<std::endl;
-	 std::cout << styledWriter.write(h[ia]) << std::endl;
-	 h[ia]["host"]=(*it);
+	std::vector<std::string> hosts = m_root["HOSTS"].getMemberNames();
+	Json::StyledWriter styledWriter;
 
-	 _processList.push_back(h[ia]);
-       }
-   }
+	// load process entries
+	for (std::vector<std::string>::iterator iter = hosts.begin(), endIter = hosts.end() ;
+			endIter != iter ; ++iter)
+	{
+		Json::Value h=m_root["HOSTS"][(*iter)];
+		std::cout<<"============"<<(*iter)<<"==========="<<std::endl;
 
+		for (uint32_t ia=0 ; ia<h.size() ; ia++)
+		{
+			std::cout << ">>> " << ia << " >>>> Process" << std::endl;
+			std::cout << styledWriter.write(h[ia]) << std::endl;
+			h[ia]["HOST"]=(*iter);
 
-  // Look for DB server
-  DimBrowser* dbr=new DimBrowser(); 
-  char *service, *format; 
-  int type;
-  // Get DB service
-  cout<<"On rentre dans scandns "<<endl;
-  _DJCNames.clear();
-
-  for(unsigned int i=0 ; i<_jobInfo.size() ; i++)
-	  delete _jobInfo.at(i);
-
-  _jobInfo.clear();
-  _jobValue.clear();
-  dbr->getServices("/DJC/*/JOBSTATUS" ); 
-
- while(type = dbr->getNextService(service, format)) 
-    { 
-      cout << service << " -  " << format << endl; 
-      std::string ss;
-      ss.assign(service);
-      size_t n=ss.find("/JOBSTATUS");
-      cout<<ss.substr(0,n)<<endl;
-      cout<<ss.substr(0,n).substr(5,n-5)<<endl;
-
-      if(std::find(vjobs.begin(), vjobs.end(), ss.substr(0,n).substr(5,n-5) ) == vjobs.end())
-    	  continue;
-
-      _DJCNames.push_back(ss.substr(0,n).substr(5,n-5));
-      DimInfo* jinf=new DimInfo(service,_jobbuffer,this);
-      _jobInfo.push_back(jinf);
-      Json::Value jv;
-      _jobValue.push_back(jv);
+			m_processList.push_back(h[ia]);
+		}
+	}
 
 
-    } 
+	// Look for DB server
+	DimBrowser* dbr = new DimBrowser();
+	char *service, *format;
+	int type;
 
-      delete dbr;
+	// Get DB service
+	std::cout<< "Scanning dim DNS" << std::endl;
+	dbr->getServices("/DJC/*/JOBSTATUS" );
+
+	while(type = dbr->getNextService(service, format))
+	{
+		std::cout << service << " -  " << format << std::endl;
+		std::string ss = service;
+
+		size_t n = ss.find("/JOBSTATUS");
+		std::string host = ss.substr(0,n).substr(5, n-5);
+
+		if(std::find(hosts.begin(), hosts.end(), host) == hosts.end())
+			continue;
+
+		m_djcNames.push_back(host);
+
+		DimInfo *pJobInfo = new DimInfo(service, m_jobbuffer, this);
+		m_jobInfo.push_back(pJobInfo);
+
+		Json::Value jobValue;
+		m_jobValue.push_back(jobValue);
+	}
+
+	delete dbr;
 }
+
+//-------------------------------------------------------------------------------------------------
 
 void DimJobInterface::infoHandler()
 {
-   DimInfo *curr = getInfo(); // get current DimInfo address 
-   if (curr->getSize()==1) return;
-   for (uint32_t i=0;i<_jobInfo.size();i++)
-     if (curr==_jobInfo[i])
-       {
-	 _jobValue[i].clear();
-	 Json::Reader reader;
-	 std::string jsonMessage;
-	 jsonMessage.assign(curr->getString());
-	 bool parsingSuccessful = reader.parse(jsonMessage,_jobValue[i]);
+	DimInfo *pInfo = getInfo(); // get pInfo DimInfo address
 
-	 // Fill the process Array
-	 // std::cout<<"Fill process array "<<_jobValue[i]["JOBS"].size()<<std::endl;
-	 // Json::StyledWriter styledWriter;
-	 // std::cout << styledWriter.write(_jobValue[i]);
-	 for (int ip=0;ip<_jobValue[i]["JOBS"].size();ip++)
-	   {
-	     Json::Value pin=_jobValue[i]["JOBS"][ip];
-	     bool found=false;
-	      for (std::vector<Json::Value>::iterator it=_processList.begin();it!=_processList.end();it++)
+	if (pInfo->getSize() == 1)
+		return;
+
+	for (uint32_t i=0 ; i<m_jobInfo.size() ; i++)
+	{
+		if (pInfo == m_jobInfo[i])
 		{
-		  //printf("host %s  compare to %s  gives %d \n",host.c_str(),(*it)["host"].asString().c_str(),host.compare((*it)["host"].asString()));
-		  if ( pin["HOST"].asString().compare((*it)["host"].asString())!=0) continue;
-		  if ( pin["NAME"].asString().compare((*it)["Name"].asString())!=0) continue;
-		  found=true;break;
+			m_jobValue[i].clear();
+
+			std::string ss = m_jobInfo[i]->getName();
+			size_t n = ss.find("/JOBSTATUS");
+			std::string hostName = ss.substr(0,n).substr(5, n-5);
+
+			Json::Reader reader;
+			std::string jsonMessage = pInfo->getString();
+
+			bool parsingSuccessful = reader.parse(jsonMessage, m_jobValue[i]);
+
+			// Fill the process array
+			for (int ip=0 ; ip<m_jobValue[i]["JOBS"].size() ; ip++)
+			{
+				Json::Value pin = m_jobValue[i]["JOBS"][ip];
+				bool found = false;
+
+				for (std::vector<Json::Value>::iterator iter = m_processList.begin(), endIter = m_processList.end() ;
+						endIter != iter ; ++iter)
+				{
+					if ( pin["HOST"].asString().compare((*iter)["HOST"].asString()) != 0)
+						continue;
+
+					if ( pin["NAME"].asString().compare((*iter)["NAME"].asString()) != 0)
+						continue;
+
+					found=true;
+					break;
+				}
+
+				if (!found)
+					pin["DAQ"] = "N";
+				else
+					pin["DAQ"] = "Y";
+
+				m_processArray.append(pin);
+			}
+
+			this->statusReceived(hostName);
+
+			return;
 		}
-	      if (!found)
-		pin["DAQ"]="N";
-	      else
-		pin["DAQ"]="Y";
-	      _processArray.append(pin);
-
-	     
-	   }
-	   
-
-       return;
-     }
-
+	}
 }
-std::string DimJobInterface::processJobList()
+
+//-------------------------------------------------------------------------------------------------
+
+std::string DimJobInterface::processJobList() const
 {
    Json::FastWriter fastWriter;
-   return fastWriter.write(_root);
+   return fastWriter.write(m_root);
 }
 
-std::string DimJobInterface::processStatusList()
+//-------------------------------------------------------------------------------------------------
+
+std::string DimJobInterface::processStatusList() const
 {
    Json::FastWriter fastWriter;
-   return fastWriter.write(_processArray);
+   return fastWriter.write(m_processArray);
 }
+
+//-------------------------------------------------------------------------------------------------
+
+Json::Value DimJobInterface::processStatus(const std::string &hostName) const
+{
+	Json::Value processStatus;
+
+	for (uint32_t i=0 ; i<m_jobInfo.size() ; i++)
+	{
+		std::string ss = m_jobInfo[i]->getName();
+		size_t n = ss.find("/JOBSTATUS");
+		std::string hname = ss.substr(0,n).substr(5, n-5);
+
+		if(hname == hostName)
+		{
+			processStatus = m_jobValue[i];
+			break;
+		}
+	}
+
+	return processStatus;
+}
+
+//-------------------------------------------------------------------------------------------------
 
 const Json::Value &DimJobInterface::getProcessStatusValue() const
 {
-	return _processArray;
+	return m_processArray;
 }
+
+//-------------------------------------------------------------------------------------------------
 
 const Json::Value &DimJobInterface::getRoot() const
 {
-	return _root;
+	return m_root;
 }
 
-void DimJobInterface::List()
+//-------------------------------------------------------------------------------------------------
+
+void DimJobInterface::list()
 {
-  // this->status();
-  // usleep(500000);
-  /*
-  Json::StyledWriter styledWriter;
-  for (uint32_t i=0;i<_jobValue.size();i++)
-    {
-    std::cout << styledWriter.write(_jobValue[i]);
-    }
-  Json::FastWriter fastWriter;
-  */
-  
-  std::cout<<std::setw(6)<<"\e[1m"<<"PID";
-  std::cout<<std::setw(15)<<"NAME";
-  std::cout<<std::setw(25)<<"HOST";
-  std::cout<<std::setw(20)<<"STATUS";
-  std::cout<<std::setw(10)<<"In DAQ"<<"\e[0m"<<std::endl<<std::endl;
-  for (int ip=0;ip<_processArray.size();ip++)
-    {
-      std::cout<<std::setw(6)<<_processArray[ip]["PID"].asUInt();
-      std::cout<<std::setw(15)<<_processArray[ip]["NAME"].asString();
-      std::cout<<std::setw(25)<<_processArray[ip]["HOST"].asString();
-      std::cout<<std::setw(20)<<_processArray[ip]["STATUS"].asString();
+	std::cout << std::setw(6)  << "\033[1m" << "PID";
+	std::cout << std::setw(15) << "NAME";
+	std::cout << std::setw(25) << "HOST";
+	std::cout << std::setw(20) << "STATUS";
+	std::cout << std::setw(10) << "In DAQ" << "\033[0m" << std::endl << std::endl;
 
-      std::cout<<std::setw(10)<<_processArray[ip]["DAQ"].asString()<<std::endl;
-    }
-}
-void DimJobInterface::restartJob(std::string host,std::string name,uint32_t pid, uint32_t sig )
-{
-  std::stringstream s0;
-  
-  s0.str(std::string());
-  this->killJob(host,pid,sig);
-  usleep(500000);
-
-  // Restart the process
-  Json::FastWriter fastWriter;
-  for (std::vector<Json::Value>::iterator it=_processList.begin();it!=_processList.end();it++)
-    {
-
-      if ( host.compare((*it)["host"].asString())!=0) continue;
-      if ( name.compare((*it)["Name"].asString())!=0) continue;
-      s0.str(std::string());
-      s0<<"/DJC/"<<(*it)["host"].asString()<<"/START";
-      std::cout<<s0.str()<<std::endl;
-      std::cout<<fastWriter.write((*it)).c_str()<<std::endl;
-      DimClient::sendCommand(s0.str().c_str(),fastWriter.write((*it)).c_str());
-      break;
-
-    }
-
-}
-
-void DimJobInterface::startJob(std::string host, std::string name)
-{
-  // Start the process
-  Json::FastWriter fastWriter;
-  for (std::vector<Json::Value>::iterator it=_processList.begin();it!=_processList.end();it++)
+	for (int ip=0 ; ip<m_processArray.size() ; ip++)
 	{
-
-	  if ( host.compare((*it)["host"].asString())!=0) continue;
-	  if ( name.compare((*it)["Name"].asString())!=0) continue;
-
-	  std::stringstream s0;
-	  s0<<"/DJC/"<<(*it)["host"].asString()<<"/START";
-
-	  std::cout<<s0.str()<<std::endl;
-
-	  std::cout<<fastWriter.write((*it)).c_str()<<std::endl;
-	  DimClient::sendCommand(s0.str().c_str(),fastWriter.write((*it)).c_str());
-
-	  break;
-
+		std::cout << std::setw(6)  << m_processArray[ip]["PID"].asUInt();
+		std::cout << std::setw(15) << m_processArray[ip]["NAME"].asString();
+		std::cout << std::setw(25) << m_processArray[ip]["HOST"].asString();
+		std::cout << std::setw(20) << m_processArray[ip]["STATUS"].asString();
+		std::cout << std::setw(10) << m_processArray[ip]["DAQ"].asString() << std::endl;
 	}
 }
 
-void DimJobInterface::startJobs(std::string host)
-{
-  std::stringstream s0;
-  
-  s0.str(std::string());
+//-------------------------------------------------------------------------------------------------
 
-  Json::FastWriter fastWriter;
-  for (std::vector<Json::Value>::iterator it=_processList.begin();it!=_processList.end();it++)
-    {
-      printf("host %s  compare to %s  gives %d \n",host.c_str(),(*it)["host"].asString().c_str(),host.compare((*it)["host"].asString()));
-      if (host.compare("ALL")==0 || host.compare((*it)["host"].asString())==0)
+void DimJobInterface::restartJob(const std::string &hostName, const std::string &jobName,
+		uint32_t pid, uint32_t sig)
+{
+	this->killJob(hostName, pid, sig);
+	usleep(500000);
+
+	std::stringstream s0;
+	Json::FastWriter fastWriter;
+
+	// Restart the process
+	for (std::vector<Json::Value>::iterator iter = m_processList.begin(), endIter = m_processList.end() ;
+			endIter != iter ; ++iter)
 	{
-	  s0.str(std::string());
-	  s0<<"/DJC/"<<(*it)["host"].asString()<<"/START";
-	  std::cout<<s0.str()<<std::endl;
-	  std::cout<<fastWriter.write((*it)).c_str()<<std::endl;
-	  DimClient::sendCommand(s0.str().c_str(),fastWriter.write((*it)).c_str());
+		if(hostName.compare((*iter)["HOST"].asString()) != 0)
+			continue;
+
+		if(jobName.compare((*iter)["NAME"].asString()) != 0)
+			continue;
+
+		s0.str("");
+		s0 << "/DJC/" << (*iter)["HOST"].asString() << "/START";
+
+		std::cout << s0.str() << std::endl;
+		std::cout << fastWriter.write((*iter)).c_str() << std::endl;
+
+		DimClient::sendCommand(s0.str().c_str(), fastWriter.write((*iter)).c_str());
+
+		break;
 	}
-
-    }
-
 }
-void DimJobInterface::clearHostJobs(std::string host)
+
+//-------------------------------------------------------------------------------------------------
+
+void DimJobInterface::startJob(const std::string &hostName, const std::string &jobName)
+{
+	std::stringstream s0;
+	Json::FastWriter fastWriter;
+
+	// Start the process
+	for (std::vector<Json::Value>::iterator iter = m_processList.begin(), endIter = m_processList.end() ;
+			endIter != iter ; ++iter)
+	{
+		if(hostName.compare((*iter)["HOST"].asString()) != 0)
+			continue;
+
+		if(jobName.compare((*iter)["NAME"].asString()) != 0)
+			continue;
+
+		s0.str("");
+		s0 << "/DJC/" << (*iter)["HOST"].asString() << "/START";
+
+		std::cout << s0.str() << std::endl;
+		std::cout << fastWriter.write((*iter)).c_str() << std::endl;
+
+		DimClient::sendCommand(s0.str().c_str(), fastWriter.write((*iter)).c_str());
+
+		break;
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void DimJobInterface::startJobs(const std::string &hostName)
 {
   std::stringstream s0;
-  
-  s0.str(std::string());
-  s0<<"/DJC/"<<host<<"/CLEAR";
-  DimClient::sendCommand(s0.str().c_str(),(int) 1);
+  Json::FastWriter fastWriter;
+
+	for (std::vector<Json::Value>::iterator iter = m_processList.begin(), endIter = m_processList.end() ;
+			endIter != iter ; ++iter)
+	{
+		if (hostName.compare("ALL")==0 || hostName.compare((*iter)["HOST"].asString()) != 0)
+			continue;
+
+		s0.str("");
+		s0 << "/DJC/" << (*iter)["HOST"].asString() << "/START";
+
+		std::cout << s0.str() << std::endl;
+		std::cout << fastWriter.write((*iter)).c_str() << std::endl;
+
+		DimClient::sendCommand(s0.str().c_str(), fastWriter.write((*iter)).c_str());
+	}
 }
+
+//-------------------------------------------------------------------------------------------------
+
+void DimJobInterface::clearHostJobs(const std::string &hostName)
+{
+	std::stringstream s0;
+	s0 << "/DJC/" << hostName <<"/CLEAR";
+
+	DimClient::sendCommand(s0.str().c_str(), (int) 1);
+}
+
+//-------------------------------------------------------------------------------------------------
 
 void DimJobInterface::clearAllJobs()
 {
-  for (std::vector<std::string>::iterator it=_DJCNames.begin();it!=_DJCNames.end();it++)
-   {
-     std::stringstream s0;
+	for (std::vector<std::string>::iterator iter = m_djcNames.begin(), endIter = m_djcNames.end() ;
+			endIter != iter ; ++iter)
+	{
+		std::stringstream s0;
+		s0 << "/DJC/" << (*iter) << "/CLEAR";
 
-      s0<<"/DJC/"<<(*it)<<"/CLEAR";
-      DimClient::sendCommand(s0.str().c_str(),(int) 1);
-
-   }
+		DimClient::sendCommand(s0.str().c_str(), (int) 1);
+	}
 }
+
+//-------------------------------------------------------------------------------------------------
 
 void DimJobInterface::status()
 {
-  std::stringstream s0;
-  
-  s0.str(std::string());
-  // std::cout<<"Clear process array "<<std::endl;
-  _processArray.clear();
+	pthread_mutex_lock(&m_mutex);
 
-  for (std::vector<std::string>::iterator its=_DJCNames.begin();its!=_DJCNames.end();its++)
-   {
-     //std::cout<<"Looking for "<<(*its)<<std::endl;
-     bool found=false;
-     for (std::vector<Json::Value>::iterator it=_processList.begin();it!=_processList.end();it++)
-       {
-	 if ((*its).compare((*it)["host"].asString())==0)
-	   {
-	     found=true;break;
-	   }
-       }
-     if (!found) continue;
-     s0.str(std::string());
+	std::stringstream s0;
+	m_processArray.clear();
 
-     s0<<"/DJC/"<<(*its)<<"/STATUS";
-     DimClient::sendCommand(s0.str().c_str(),(int) 1);
-   }
+	for (std::vector<std::string>::iterator djcIter = m_djcNames.begin(), djcEndIter = m_djcNames.end() ;
+			djcEndIter != djcIter ; ++djcIter)
+	{
+		bool found = false;
+
+		for (std::vector<Json::Value>::iterator iter = m_processList.begin(), endIter = m_processList.end() ;
+				endIter != iter ; ++iter)
+		{
+			if ((*djcIter).compare((*iter)["HOST"].asString()) == 0)
+			{
+				found = true;
+				break;
+			}
+		}
+
+		if(!found)
+			continue;
+
+		s0.str("");
+		s0 << "/DJC/" << (*djcIter) << "/STATUS";
+
+		DimClient::sendCommand(s0.str().c_str(), (int) 1);
+	}
+
+	pthread_mutex_unlock(&m_mutex);
 }
 
-void DimJobInterface::killJob(std::string host,uint32_t pid,uint32_t sig)
+//-------------------------------------------------------------------------------------------------
+
+void DimJobInterface::killJob(const std::string &hostName, uint32_t pid, uint32_t sig)
 {
-  std::stringstream s0;
-  
-  s0.str(std::string());
+	std::stringstream s0;
+	s0 << "/DJC/" << hostName << "/KILL";
 
-  s0<<"/DJC/"<<host<<"/KILL";
-  int data[2];
-  data[0]=pid;
-  data[1]=sig;
-  DimClient::sendCommand(s0.str().c_str(),data,2*sizeof(int32_t));
+	int32_t data[2];
+	data[0] = pid;
+	data[1] = sig;
 
-   
-
+	DimClient::sendCommand(s0.str().c_str(), data, 2*sizeof(int32_t));
 }
 
+//-------------------------------------------------------------------------------------------------
 
+void DimJobInterface::startTimer(int nSeconds)
+{
+	this->start(nSeconds);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void DimJobInterface::stopTimer()
+{
+	this->stop();
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void DimJobInterface::clear()
+{
+	m_root.clear();
+	m_processList.clear();
+	m_jobValue.clear();
+	m_processArray.clear();
+
+	for(unsigned int i=0 ; i<m_jobInfo.size() ; i++)
+		delete m_jobInfo.at(i);
+
+	m_jobInfo.clear();
+	m_djcNames.clear();
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void DimJobInterface::timerHandler()
+{
+	this->status();
+}
 
