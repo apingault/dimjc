@@ -7,13 +7,18 @@ DIM (CERN) job control
 
 # With scons :
 sudo mkdir -p /opt/dhcal/lib
+
 sudo mkdir -p /opt/dhcal/bin
+
 sudo scons install
 
 # With cmake :
 mkdir build
+
 cd build
+
 cmake -DDIMDIR=/path/to/dim ..
+
 make install
 
 # modify etc/dimjcd according to your installation (DIM_DNS_NODE)
@@ -28,6 +33,9 @@ The DimJobInterface class is provided to start/stop and query job status.
 Example :
 
 DimJobInterface *pInterface = new DimJibInterface();
+
 pInterface->loadJSON("my_setup.json");
+
 pInterface->startJobs("localhost");
+
 pInterface->startJob("localhost", "MyApplication");
