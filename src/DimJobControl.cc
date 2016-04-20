@@ -44,6 +44,59 @@
 #define _jobControl_MMAX 16
 #define _jobControl_MAXENV 100
 
+//-------------------------------------------------------------------------------------------------
+
+class LogRpc : public DimRpc
+{
+public:
+	LogRpc(char *name, char *format_in, char *format_out);
+	void rpcHandler();
+	std::string log(pid_t pid);
+};
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+
+LogRpc::LogRpc(char *name, char *format_in, char *format_out) :
+		DimRpc(name, format_in, format_out)
+{
+	/* nop */
+}
+
+void LogRpc::rpcHandler()
+{
+	pid_t pid = this->getInt();
+	std::string contents(this->log(pid));
+	setData( (char*) contents.c_str() );
+}
+
+//-------------------------------------------------------------------------------------------------
+
+std::string LogRpc::log(pid_t pid)
+{
+	std::stringstream fileName;
+	fileName << "/tmp/dimjcPID" << pid << ".log";
+
+	std::ifstream in(fileName.str().c_str(), std::ios::in);
+
+	if( in )
+	{
+		std::string contents;
+
+		in.seekg(0, std::ios::end);
+		contents.resize(in.tellg());
+		in.seekg(0, std::ios::beg);
+		in.read(&contents[0], contents.size());
+		in.close();
+
+		return contents;
+	}
+	else
+		return "File '" + fileName.str() + "' not found !";
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 
 std::string &trimString(std::string &str)
 {
@@ -131,6 +184,10 @@ DimJobControl::DimJobControl()
 	this->allocateCommands();
 
 	s0.str("");
+	s0 << "/DJC/" << m_hostname << "/LOGRPC";
+	m_pLogRpc = new LogRpc((char*) s0.str().c_str(), "I:1", "C");
+
+	s0.str("");
 	s0 << "DimJobControl-" << m_hostname;
 
 	DimServer::start((char*) s0.str().c_str());
@@ -142,6 +199,8 @@ DimJobControl::~DimJobControl()
 {
 	clear();
 
+	delete m_pLogRpc;
+	delete m_pClearCommand;
 	delete m_pStartCommand;
 	delete m_pKillCommand;
 	delete m_pStatusCommand;
@@ -222,11 +281,31 @@ std::string DimJobControl::status()
 
 std::string DimJobControl::log(pid_t pid)
 {
-	// TODO to implement this function
+//	// TODO to implement this function
 	std::stringstream s0;
 	s0.str(std::string());
 	s0<<"Not yet done "<<std::endl;
 	return s0.str();
+
+//	std::stringstream fileName;
+//	fileName << "/tmp/dimjcPID" << pid << ".log";
+//
+//	std::ifstream in(filename.str().c_str(), std::ios::in);
+//
+//	if( in )
+//	{
+//		std::string contents;
+//
+//		in.seekg(0, std::ios::end);
+//		contents.resize(in.tellg());
+//		in.seekg(0, std::ios::beg);
+//		in.read(&contents[0], contents.size());
+//		in.close();
+//
+//		return contents;
+//	}
+//	else
+//		return "File '" + fileName.str() + "' not found !";
 }
 
 //-------------------------------------------------------------------------------------------------

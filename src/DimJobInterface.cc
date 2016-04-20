@@ -17,7 +17,6 @@
 #include <sys/param.h>
 #include <string.h>
 
-
 DimJobInterface::DimJobInterface() :
 	DimTimer(),
 	m_timerPeriod(0)
@@ -413,6 +412,25 @@ void DimJobInterface::startTimer(int nSeconds)
 void DimJobInterface::stopTimer()
 {
 	DimTimer::stop();
+}
+
+//-------------------------------------------------------------------------------------------------
+
+std::string DimJobInterface::queryLogFile(const std::string &hostName, pid_t pid)
+{
+	std::stringstream ss;
+	ss << "/DJC/" << hostName << "/LOGRPC";
+
+	DimRpcInfo info((char*) ss.str().c_str(), (char*)"");
+	info.setData(static_cast<int &>(pid));
+
+	// wait for server answer
+	char *contents( info.getString() );
+
+	if( contents )
+		return std::string( contents );
+	else
+		return std::string();
 }
 
 //-------------------------------------------------------------------------------------------------

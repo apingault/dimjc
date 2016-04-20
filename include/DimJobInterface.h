@@ -140,9 +140,14 @@ public:
 	void startTimer(int nSeconds);
 
 	/**
-	 * @brief  Stop the automatic jobs status query timer
+	 *  @brief  Stop the automatic jobs status query timer
 	 */
 	void stopTimer();
+
+	/**
+	 *  @brief  Query the log file of the job with the target pid and host name
+	 */
+	std::string queryLogFile(const std::string &hostName, pid_t pid);
 
 protected:
 	/**

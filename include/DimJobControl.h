@@ -129,6 +129,7 @@ protected:
 	DimCommand*        m_pLogCommand;      ///< The log command for a specific process
 	DimService*        m_pJobService;      ///< The jobs list service for all processes
 	DimService*        m_pLogService;      ///< The log service for a specific process
+	DimRpc*            m_pLogRpc;          ///< The rpc to query log for a specific pid
 };
 
 
