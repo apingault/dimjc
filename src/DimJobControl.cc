@@ -15,7 +15,6 @@
 #include <sys/stat.h>
 #include <sys/dir.h>
 #include <sys/param.h>
-#include <sys/sysctl.h>
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
@@ -23,6 +22,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
+
+#ifdef __APPLE__
+#include <sys/sysctl.h>
+#endif
 
 
 // #define DEBUG_PRINT_ENABLED 1  // uncomment to enable DEBUG statements
@@ -59,7 +62,7 @@ public:
 //-------------------------------------------------------------------------------------------------
 
 LogRpc::LogRpc(char *name, char *format_in, char *format_out) :
-		DimRpc(name, format_in, format_out)
+	DimRpc(name, format_in, format_out)
 {
 	/* nop */
 }
@@ -80,7 +83,7 @@ std::string LogRpc::log(pid_t pid)
 
 	std::ifstream in(fileName.str().c_str(), std::ios::in);
 
-	if( in )
+	if ( in )
 	{
 		std::string contents;
 
@@ -101,17 +104,17 @@ std::string LogRpc::log(pid_t pid)
 
 std::string &trimString(std::string &str)
 {
-	if(str.empty())
+	if (str.empty())
 		return str;
 
-	while(str.at(0) == ' ')
+	while (str.at(0) == ' ')
 		str.erase(0, 1);
 
-	if(str.empty())
+	if (str.empty())
 		return str;
 
-	while(str.at(str.size()-1) == ' ')
-		str.erase(str.size()-2, 1);
+	while (str.at(str.size() - 1) == ' ')
+		str.erase(str.size() - 2, 1);
 
 	return str;
 }
@@ -120,11 +123,11 @@ std::string &trimString(std::string &str)
 
 std::string processStatus(uint32_t lpid)
 {
-  /*
-	 *
+
+#ifdef __APPLE__
+	/*
+	 * /proc system not implemented on MacOSX
 	 * Use sysctl to get informations on the processus
-	 * sysctl builtin on all UNIX systems including MACOSX
-	 *
 	 */
 	struct kinfo_proc kp;
 	size_t length = sizeof(kp);
@@ -157,35 +160,30 @@ std::string processStatus(uint32_t lpid)
 
 	return std::string("X (dead)");
 
+#else
+	std::stringstream s;
+	s << "/proc/" << lpid << "/status";
 
-	/*
-	 *
-	 * /proc system not implemented on MacOSX
-	 *
-	 */
+	std::ifstream infile(s.str().c_str());
 
-	// std::stringstream s;
-	// s << "/proc/" << lpid << "/status";
+	if (!infile.good())
+		return std::string("X (dead)");
 
-	// std::ifstream infile(s.str().c_str());
+	std::string line;
 
-	// if (!infile.good())
-	// 	return std::string("X (dead)");
+	while (std::getline(infile, line))
+	{
+		if (line.substr(0, 6).compare("State:") == 0)
+		{
+			std::string state = line.substr(6);
+			return trimString(state);
+		}
+	}
 
-	// std::string line;
+	infile.close();
 
-	// while (std::getline(infile, line))
-	// {
-	// 	if (line.substr(0, 6).compare("State:") == 0)
-	// 	{
-	// 		std::string state = line.substr(6);
-	// 		return trimString(state);
-	// 	}
-	// }
-
-	// infile.close();
-
-	// return std::string("X (dead)");
+	return std::string("X (dead)");
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -211,7 +209,7 @@ DimProcessData::DimProcessData(const std::string &jsonString)
 
 DimJobControl::DimJobControl()
 {
-	std::cout<< "Building DimJobControl" << std::endl;
+	std::cout << "Building DimJobControl" << std::endl;
 
 	char hname[80];
 	gethostname(hname, 80);
@@ -286,7 +284,7 @@ void DimJobControl::killProcess(pid_t pid, uint32_t sig)
 void::DimJobControl::clear()
 {
 	for (PidToProcessMap::iterator iter = m_processMap.begin(), endIter = m_processMap.end() ;
-			endIter != iter ; ++iter)
+	     endIter != iter ; ++iter)
 	{
 		if (iter->second->m_status == DimProcessData::RUNNING)
 			::kill(iter->first, SIGKILL);
@@ -305,7 +303,7 @@ std::string DimJobControl::status()
 	Json::Value array;
 
 	for (PidToProcessMap::iterator iter = m_processMap.begin(), endIter = m_processMap.end() ;
-			endIter != iter ; ++iter)
+	     endIter != iter ; ++iter)
 	{
 		Json::Value pinf;
 
@@ -329,7 +327,7 @@ std::string DimJobControl::log(pid_t pid)
 //	// TODO to implement this function
 	std::stringstream s0;
 	s0.str(std::string());
-	s0<<"Not yet done "<<std::endl;
+	s0 << "Not yet done " << std::endl;
 	return s0.str();
 
 //	std::stringstream fileName;
@@ -390,10 +388,10 @@ void DimJobControl::startProcess(DimProcessData* pProcessData)
 	std::vector<std::string> arguments;
 	std::vector<std::string> environmentVars;
 
-	for (uint32_t ia=0 ; ia<pProcessData->m_processInfo["ARGS"].size() ; ia++)
+	for (uint32_t ia = 0 ; ia < pProcessData->m_processInfo["ARGS"].size() ; ia++)
 		arguments.push_back(pProcessData->m_processInfo["ARGS"][ia].asString());
 
-	for (uint32_t ia=0;ia<pProcessData->m_processInfo["ENV"].size();ia++)
+	for (uint32_t ia = 0; ia < pProcessData->m_processInfo["ENV"].size(); ia++)
 		environmentVars.push_back(pProcessData->m_processInfo["ENV"][ia].asString());
 
 	signal(SIGCHLD, SIG_IGN);
@@ -421,8 +419,8 @@ void DimJobControl::startProcess(DimProcessData* pProcessData)
 	sprintf(executivePath, programName.c_str());
 
 	// fills arguments list
-	for (int i = 0; i<_jobControl_MMAX ; i++) {
-		for (int j = 0; j<_jobControl_NMAX ; j++) {
+	for (int i = 0; i < _jobControl_MMAX ; i++) {
+		for (int j = 0; j < _jobControl_NMAX ; j++) {
 			argv[i][j] = (char)NULL;
 		}
 	}
@@ -430,7 +428,7 @@ void DimJobControl::startProcess(DimProcessData* pProcessData)
 	int i = 1;
 
 	for (std::vector<std::string>::const_iterator iter = arguments.begin(), endIter = arguments.end() ;
-			iter != endIter ; ++iter)
+	     iter != endIter ; ++iter)
 	{
 		sprintf( argv[i], "%s", (*iter).c_str());
 		pArgv[i] = & argv[i][0];
@@ -450,7 +448,7 @@ void DimJobControl::startProcess(DimProcessData* pProcessData)
 
 	// Fills environment list
 	for (std::vector<std::string>::const_iterator iter = environmentVars.begin(), endIter = environmentVars.end() ;
-			endIter != iter ; ++iter)
+	     endIter != iter ; ++iter)
 	{
 		sprintf( envp[i], "%s", (*iter).c_str());
 		pEnvp[i] = & envp[i][0];
@@ -469,7 +467,7 @@ void DimJobControl::startProcess(DimProcessData* pProcessData)
 		ret = setuid(0);
 
 		if ( ret != 0 )
-			INFO_PRINT("child: FATAL couldn't setuid() to %i.\n",0);
+			INFO_PRINT("child: FATAL couldn't setuid() to %i.\n", 0);
 	}
 
 
@@ -477,11 +475,11 @@ void DimJobControl::startProcess(DimProcessData* pProcessData)
 	char logPath[100];
 
 	pid_t mypid = getpid(); // get my pid to append to filename
-	sprintf(logPath,"/tmp/dimjcPID%i.log",mypid);             // construct filename to /tmp/....
+	sprintf(logPath, "/tmp/dimjcPID%i.log", mypid);           // construct filename to /tmp/....
 
 	try
 	{
-		int tmpout = open( logPath , O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH );    // open file
+		int tmpout = open( logPath , O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH ); // open file
 		dup2( tmpout, 1 );                                         // stdout to file
 		dup2( tmpout, 2 );                                         // stderr to file
 		close( tmpout );                                       // close unused descriptor
@@ -499,7 +497,7 @@ void DimJobControl::startProcess(DimProcessData* pProcessData)
 
 	ret = execve( executivePath, pArgv, pEnvp);
 
-	INFO_PRINT("jobControl: FATAL OOps, we came back with ret = %i , errno = %i , dying",ret, errno);
+	INFO_PRINT("jobControl: FATAL OOps, we came back with ret = %i , errno = %i , dying", ret, errno);
 	exit(-1);
 }
 
@@ -510,14 +508,14 @@ void DimJobControl::commandHandler()
 	DimCommand *pCommand = getCommand();
 	std::cout << "J'ai recu " << pCommand->getName() << " COMMAND" << std::endl;
 
-	if(pCommand == m_pClearCommand)
+	if (pCommand == m_pClearCommand)
 	{
 		this->clear();
 		m_pJobService->updateService((char*) this->status().c_str());
 		return;
 	}
 
-	if(pCommand == m_pStartCommand)
+	if (pCommand == m_pStartCommand)
 	{
 		std::cout << pCommand->getString() << std::endl;
 		std::string jsonString = pCommand->getString();
@@ -534,11 +532,11 @@ void DimJobControl::commandHandler()
 		return;
 	}
 
-	if(pCommand == m_pKillCommand)
+	if (pCommand == m_pKillCommand)
 	{
 		int* data = (int*) pCommand->getData();
 
-		if(!data)
+		if (!data)
 			return;
 
 		pid_t pid = data[0];
@@ -553,19 +551,19 @@ void DimJobControl::commandHandler()
 		return;
 	}
 
-	if(pCommand == m_pStatusCommand)
+	if (pCommand == m_pStatusCommand)
 	{
 		m_pJobService->updateService((char*) this->status().c_str());
 
 		return;
 	}
 
-	if(pCommand == m_pLogCommand)
+	if (pCommand == m_pLogCommand)
 	{
 		m_pLogService->updateService((char*) this->log(pCommand->getInt()).c_str());
 
 		return ;
 	}
 
-	std::cout<< "Unknown command " << pCommand->getName() << std::endl;
+	std::cout << "Unknown command " << pCommand->getName() << std::endl;
 }
