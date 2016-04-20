@@ -13,8 +13,9 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/dir.h>  
-#include <sys/param.h>  
+#include <sys/dir.h>
+#include <sys/param.h>
+#include <sys/sysctl.h>
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
@@ -119,28 +120,72 @@ std::string &trimString(std::string &str)
 
 std::string processStatus(uint32_t lpid)
 {
-    std::stringstream s;
-    s << "/proc/" << lpid << "/status";
+  /*
+	 *
+	 * Use sysctl to get informations on the processus
+	 * sysctl builtin on all UNIX systems including MACOSX
+	 *
+	 */
+	struct kinfo_proc kp;
+	size_t length = sizeof(kp);
 
-    std::ifstream infile(s.str().c_str());
+	if (length == 0)
+		return std::string("DimJobControl.cc: syctl::kinfo_proc is empty");
 
-    if (!infile.good())
-      return std::string("X (dead)");
+	int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PID, (int)(lpid) };
 
-    std::string line;
+	if (sysctl(mib, 4, &kp, &length, NULL, 0) < 0)
+		return std::string("DimJobControl.cc: Unknown Value for sysctl");
 
-    while (std::getline(infile, line))
-    {
-    	if (line.substr(0,6).compare("State:") == 0)
-    	{
-    		std::string state = line.substr(6);
-    		return trimString(state);
-    	}
-    }
+	int processStatus = kp.kp_proc.p_stat;
+	if (processStatus <= 0) {
+		// No PID Status found
+		return std::string("X (dead)");
+	}
 
-    infile.close();
+	// Return the /proc/PID/status state for backward compatibilty & lisibility
+	if ( (processStatus & SIDL) == SIDL )
+		return std::string("D (disk sleep)");
+	if ( (processStatus & SRUN) == SRUN )
+		return std::string("R (running)");
+	if ( (processStatus & SSLEEP) == SSLEEP )
+		return std::string("S (sleeping)");
+	if ( (processStatus & SSTOP) == SSTOP )
+		return std::string("T (stopped)");
+	if ( (processStatus & SZOMB) == SZOMB )
+		return std::string("Z (zombie)");
 
-    return std::string("X (dead)");
+	return std::string("X (dead)");
+
+
+	/*
+	 *
+	 * /proc system not implemented on MacOSX
+	 *
+	 */
+
+	// std::stringstream s;
+	// s << "/proc/" << lpid << "/status";
+
+	// std::ifstream infile(s.str().c_str());
+
+	// if (!infile.good())
+	// 	return std::string("X (dead)");
+
+	// std::string line;
+
+	// while (std::getline(infile, line))
+	// {
+	// 	if (line.substr(0, 6).compare("State:") == 0)
+	// 	{
+	// 		std::string state = line.substr(6);
+	// 		return trimString(state);
+	// 	}
+	// }
+
+	// infile.close();
+
+	// return std::string("X (dead)");
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -164,7 +209,7 @@ DimProcessData::DimProcessData(const std::string &jsonString)
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 
-DimJobControl::DimJobControl() 
+DimJobControl::DimJobControl()
 {
 	std::cout<< "Building DimJobControl" << std::endl;
 
