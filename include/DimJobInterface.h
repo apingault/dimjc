@@ -164,6 +164,31 @@ protected:
 	 */
 	virtual void statusReceived(const std::string &/*hostName*/) {}
 
+	/**
+	 *  @brief  Perform variables replacement from vars into hostsValue
+	 *
+	 *  @param  hostsValue the json value of hosts settings
+	 *  @param  vars the json value of variables
+	 */
+	virtual void performVariablesReplacement( Json::Value &hostsValue, const Json::Value &vars );
+
+	/**
+	 *  @brief  Build the map of variables to replace in host processes settings
+	 *
+	 *  @param  hostName the target host name
+	 *  @param  vars the json value storing the input variables
+	 *  @param  parameters the map of parameters to receive
+	 */
+	virtual void buildHostVariableMap( const std::string &hostName, const Json::Value &vars , std::map<std::string,std::string> &parameters);
+
+	/**
+	 *  @brief  Replace a portion of string with all occurrences found in variable map
+	 *
+	 *  @param  targetString the string to modify
+	 *  @param  parameters the map of parameters to tests
+	 */
+	virtual void replace( std::string &targetString, const std::map<std::string,std::string> &parameters);
+
 private:
 	/**
 	 *  @brief  Dim timer handler

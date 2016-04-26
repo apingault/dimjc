@@ -56,15 +56,21 @@ void DimJobInterface::loadJSON(const std::string &fileName)
 		return ;
 	}
 
-	std::vector<std::string> hosts = m_root["HOSTS"].getMemberNames();
+	Json::Value &hostsValue = m_root["HOSTS"];
+	Json::Value &vars = m_root["VARS"];
+	std::vector<std::string> hosts = hostsValue.getMemberNames();
 	Json::StyledWriter styledWriter;
+
+	this->performVariablesReplacement( hostsValue , vars );
 
 	// load process entries
 	for (std::vector<std::string>::iterator iter = hosts.begin(), endIter = hosts.end() ;
 			endIter != iter ; ++iter)
 	{
-		Json::Value h=m_root["HOSTS"][(*iter)];
+		Json::Value h = hostsValue[(*iter)];
 		std::cout<<"============"<<(*iter)<<"==========="<<std::endl;
+
+
 
 		for (uint32_t ia=0 ; ia<h.size() ; ia++)
 		{
@@ -447,6 +453,102 @@ void DimJobInterface::clear()
 
 	m_jobInfo.clear();
 	m_djcNames.clear();
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void DimJobInterface::performVariablesReplacement( Json::Value &hostsValue, const Json::Value &vars )
+{
+	std::vector<std::string> hosts = hostsValue.getMemberNames();
+
+	// load process entries
+	for (std::vector<std::string>::iterator iter = hosts.begin(), endIter = hosts.end() ;
+			endIter != iter ; ++iter)
+	{
+		Json::Value &h = hostsValue[(*iter)];
+
+		std::map<std::string,std::string> parameters;
+		this->buildHostVariableMap( *iter , vars , parameters );
+
+		if( parameters.empty() )
+			continue;
+
+		for (uint32_t ia=0 ; ia<h.size() ; ia++)
+		{
+			Json::Value &name = h[ia]["NAME"];
+			Json::Value &program = h[ia]["PROGRAM"];
+			Json::Value &args = h[ia]["ARGS"];
+			Json::Value &envs = h[ia]["ENV"];
+
+			std::string nameStr = name.asString();
+			this->replace(nameStr, parameters);
+			h[ia]["NAME"] = Json::Value(nameStr);
+
+			std::string programStr = program.asString();
+			this->replace(programStr, parameters);
+			h[ia]["PROGRAM"] = Json::Value(programStr);
+
+			for(unsigned int a=0 ; a<args.size() ; a++)
+			{
+				std::string argStr = args[a].asString();
+				this->replace(argStr, parameters);
+				h[ia]["ARGS"][a] = Json::Value(argStr);
+			}
+
+			for(unsigned int e=0 ; e<envs.size() ; e++)
+			{
+				std::string envStr = envs[e].asString();
+				this->replace(envStr, parameters);
+				h[ia]["ENV"][e] = Json::Value(envStr);
+			}
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void DimJobInterface::buildHostVariableMap( const std::string &hostName, const Json::Value &vars , std::map<std::string,std::string> &parameters)
+{
+	if( ! vars["GLOBAL"].empty() )
+	{
+		std::vector<std::string> globals = vars["GLOBAL"].getMemberNames();
+
+		for( std::vector<std::string>::iterator iter = globals.begin(), endIter = globals.end() ;
+				endIter != iter ; ++iter)
+		{
+			std::string var = vars["GLOBAL"][(*iter)].asString();
+			this->replace( var , parameters );
+			parameters[ *iter ] = var;
+		}
+	}
+
+	if( ! vars[hostName].empty() )
+	{
+		std::vector<std::string> varNames = vars[hostName].getMemberNames();
+
+		for( std::vector<std::string>::iterator iter = varNames.begin(), endIter = varNames.end() ;
+				endIter != iter ; ++iter)
+		{
+			std::string var = vars[hostName][(*iter)].asString();
+			this->replace( var , parameters );
+			parameters[ *iter ] = var;
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void DimJobInterface::replace( std::string &targetString, const std::map<std::string,std::string> &variables)
+{
+	for(std::map<std::string, std::string>::const_iterator iter = variables.begin(), endIter = variables.end() ;
+			endIter != iter ; ++iter)
+	{
+		std::string variable = "${" + iter->first + "}";
+		size_t pos = targetString.find(variable);
+
+		if(pos != std::string::npos)
+			targetString.replace(pos, variable.size(), iter->second);
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
