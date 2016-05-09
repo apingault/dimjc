@@ -45,7 +45,7 @@
 #endif
 
 #define _jobControl_NMAX 4096
-#define _jobControl_MMAX 16
+#define _jobControl_MMAX 100
 #define _jobControl_MAXENV 100
 
 //-------------------------------------------------------------------------------------------------
