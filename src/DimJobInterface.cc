@@ -1,5 +1,6 @@
 
 #include "DimJobInterface.h"
+#include "fileTailer.hh"
 
 // -- std headers
 #include <iostream>
@@ -422,19 +423,34 @@ void DimJobInterface::stopTimer()
 
 //-------------------------------------------------------------------------------------------------
 
-std::string DimJobInterface::queryLogFile(const std::string &hostName, pid_t pid)
+std::string DimJobInterface::queryLogFile(const std::string &hostName, pid_t pid, const unsigned int nLines)
 {
 	std::stringstream ss;
 	ss << "/DJC/" << hostName << "/LOGRPC";
 
 	DimRpcInfo info((char*) ss.str().c_str(), (char*)"");
 	info.setData(static_cast<int &>(pid));
+				fileTailer t((uint32_t) 1024 * 512);
 
 	// wait for server answer
 	char *contents( info.getString() );
 
 	if( contents )
-		return std::string( contents );
+	{
+		if (nLines>0)
+			{					
+				char buf[1024 * 512];
+			  FILE* file=(FILE*)info.getString();
+			  std::stringstream ss;
+			  ss << "/tmp/dimjcPID" << pid << ".log";
+				t.tail(ss.str(), nLines, buf);
+				std::stringstream so;
+				so<<buf;
+				return so.str();
+			}	
+			else
+			return std::string( contents );
+	}
 	else
 		return std::string();
 }

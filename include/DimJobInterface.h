@@ -145,9 +145,10 @@ public:
 	void stopTimer();
 
 	/**
-	 *  @brief  Query the log file of the job with the target pid and host name
+	 *  @brief  Query the log file of the job with the target pid and host name.
+	 *          Tail last nLines if nLines!=0
 	 */
-	std::string queryLogFile(const std::string &hostName, pid_t pid);
+	std::string queryLogFile(const std::string &hostName, pid_t pid, const unsigned int nLines=0);
 
 protected:
 	/**
