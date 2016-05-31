@@ -72,25 +72,19 @@ LogRpc::LogRpc(char *name, char *format_in, char *format_out) :
 
 void LogRpc::rpcHandler()
 {
-//	pid_t pid = this->getInt();
-	std::cout << "Get Data" << std::endl;
 	int *data = (int *) this->getData();
 
 	if(!data)
 	{
-		std::cout << "NULL Data" << std::endl;
 		setData((char*)"");
 		return;
 	}
 
-	std::cout << "Get pid and n lines = " << data[1] << std::endl;
 	const pid_t pid(data[0]);
 	const unsigned int nLines(data[1]);
 
-	std::cout << "Getting log" << std::endl;
 	std::string contents(this->log(pid, nLines));
 
-	std::cout << "Set Data" << std::endl;
 	setData( (char*) contents.c_str() );
 }
 
@@ -101,16 +95,11 @@ std::string LogRpc::log(pid_t pid, uint32_t nLines)
 	std::stringstream fileName;
 	fileName << "/tmp/dimjcPID" << pid << ".log";
 
-	std::cout << "n lines : " << nLines << std::endl;
-
 	if(nLines > 0)
 	{
 		FileTailer tailer(TAILER_MAX_BUFFER_SIZE);
 		char tailBuffer[TAILER_MAX_BUFFER_SIZE];
-
-		std::cout << "DO tail" << std::endl;
 		tailer.tail(fileName.str(), nLines, tailBuffer);
-		std::cout << "DO tail -- OK" << std::endl;
 
 		return std::string(tailBuffer);
 	}
