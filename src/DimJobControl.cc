@@ -1,5 +1,6 @@
 
 #include "DimJobControl.h"
+#include "fileTailer.hh"
 
 // -- std headers
 #include <iostream>
@@ -48,6 +49,8 @@
 #define _jobControl_MMAX 16
 #define _jobControl_MAXENV 100
 
+#define TAILER_MAX_BUFFER_SIZE 524288 // = 1024*512
+
 //-------------------------------------------------------------------------------------------------
 
 class LogRpc : public DimRpc
@@ -55,7 +58,7 @@ class LogRpc : public DimRpc
 public:
 	LogRpc(char *name, char *format_in, char *format_out);
 	void rpcHandler();
-	std::string log(pid_t pid);
+	std::string log(pid_t pid, uint32_t nLines);
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -69,34 +72,67 @@ LogRpc::LogRpc(char *name, char *format_in, char *format_out) :
 
 void LogRpc::rpcHandler()
 {
-	pid_t pid = this->getInt();
-	std::string contents(this->log(pid));
+//	pid_t pid = this->getInt();
+	std::cout << "Get Data" << std::endl;
+	int *data = (int *) this->getData();
+
+	if(!data)
+	{
+		std::cout << "NULL Data" << std::endl;
+		setData((char*)"");
+		return;
+	}
+
+	std::cout << "Get pid and n lines = " << data[1] << std::endl;
+	const pid_t pid(data[0]);
+	const unsigned int nLines(data[1]);
+
+	std::cout << "Getting log" << std::endl;
+	std::string contents(this->log(pid, nLines));
+
+	std::cout << "Set Data" << std::endl;
 	setData( (char*) contents.c_str() );
 }
 
 //-------------------------------------------------------------------------------------------------
 
-std::string LogRpc::log(pid_t pid)
+std::string LogRpc::log(pid_t pid, uint32_t nLines)
 {
 	std::stringstream fileName;
 	fileName << "/tmp/dimjcPID" << pid << ".log";
 
-	std::ifstream in(fileName.str().c_str(), std::ios::in);
+	std::cout << "n lines : " << nLines << std::endl;
 
-	if ( in )
+	if(nLines > 0)
 	{
-		std::string contents;
+		FileTailer tailer(TAILER_MAX_BUFFER_SIZE);
+		char tailBuffer[TAILER_MAX_BUFFER_SIZE];
 
-		in.seekg(0, std::ios::end);
-		contents.resize(in.tellg());
-		in.seekg(0, std::ios::beg);
-		in.read(&contents[0], contents.size());
-		in.close();
+		std::cout << "DO tail" << std::endl;
+		tailer.tail(fileName.str(), nLines, tailBuffer);
+		std::cout << "DO tail -- OK" << std::endl;
 
-		return contents;
+		return std::string(tailBuffer);
 	}
 	else
-		return "File '" + fileName.str() + "' not found !";
+	{
+		std::ifstream in(fileName.str().c_str(), std::ios::in);
+
+		if ( in )
+		{
+			std::string contents;
+
+			in.seekg(0, std::ios::end);
+			contents.resize(in.tellg());
+			in.seekg(0, std::ios::beg);
+			in.read(&contents[0], contents.size());
+			in.close();
+
+			return contents;
+		}
+		else
+			return "File '" + fileName.str() + "' not found !";
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -228,7 +264,7 @@ DimJobControl::DimJobControl()
 
 	s0.str("");
 	s0 << "/DJC/" << m_hostname << "/LOGRPC";
-	m_pLogRpc = new LogRpc((char*) s0.str().c_str(), "I:1", "C");
+	m_pLogRpc = new LogRpc((char*) s0.str().c_str(), "I:2", "C");
 
 	s0.str("");
 	s0 << "DimJobControl-" << m_hostname;

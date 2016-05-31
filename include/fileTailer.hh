@@ -10,18 +10,36 @@
 #include <string>
 
 
-
-class fileTailer
+/**
+ *  @brief  FileTailer class
+ */
+class FileTailer
 {
- public:
-  fileTailer(uint32_t maxbuff);
-  void tail(std::string name,uint32_t nl, char* buf);
-  void tail(FILE *f,uint32_t nl, char* buf);
- private:
-  int findTail(char *lines[][2], int nlines, char buff[], int maxbuff);
-  int fileTail(FILE* s,char *lines[][2], int nlines, char buff[], int maxbuff);
-  void shift(char *lines[][2], int nlines);
-  bool testForRoom(char *lines[][2], int index, char *buffp);
-  uint32_t _MAXBUFF;
+public:
+	/**
+	 *  @brief  Constructor
+	 *
+	 *  @param  maxbuff the max buffer size to tail
+	 */
+	FileTailer(uint32_t maxbuff);
+
+	/**
+	 *  @brief  Tail the file with a maximum number of lines
+	 */
+	void tail(const std::string &fName, uint32_t nLines, char *pBuffer);
+
+	/**
+	 *  @brief  Tail the file with a maximum number of lines
+	 */
+	void tail(FILE *f, uint32_t nLines, char *pBuffer);
+
+private:
+	int findTail(char *lines[][2], int nlines, char buff[], int maxbuff);
+	int fileTail(FILE* s,char *lines[][2], int nlines, char buff[], int maxbuff);
+	void shift(char *lines[][2], int nlines);
+	bool testForRoom(char *lines[][2], int index, char *buffp);
+
+private:
+	uint32_t _MAXBUFF;
 };  
 #endif 

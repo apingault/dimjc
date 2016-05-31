@@ -429,28 +429,20 @@ std::string DimJobInterface::queryLogFile(const std::string &hostName, pid_t pid
 	ss << "/DJC/" << hostName << "/LOGRPC";
 
 	DimRpcInfo info((char*) ss.str().c_str(), (char*)"");
-	info.setData(static_cast<int &>(pid));
-				fileTailer t((uint32_t) 1024 * 512);
+
+	int data[2];
+	data[0] = pid;
+	data[1] = nLines;
+
+	std::cout << "Sending : pid " << data[0] << " , nLines : " << data[1] << std::endl;
+
+	info.setData((void*)data, 2*sizeof(int));
 
 	// wait for server answer
 	char *contents( info.getString() );
 
 	if( contents )
-	{
-		if (nLines>0)
-			{					
-				char buf[1024 * 512];
-			  FILE* file=(FILE*)info.getString();
-			  std::stringstream ss;
-			  ss << "/tmp/dimjcPID" << pid << ".log";
-				t.tail(ss.str(), nLines, buf);
-				std::stringstream so;
-				so<<buf;
-				return so.str();
-			}	
-			else
-			return std::string( contents );
-	}
+		return std::string( contents );
 	else
 		return std::string();
 }
