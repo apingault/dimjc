@@ -61,6 +61,7 @@ SET(
     SRC_FILES
     src/DimJobControl.cc
     src/DimJobInterface.cc
+    src/fileTailer.cxx
 )
 
 ADD_SHARED_LIBRARY( dimjc ${SRC_FILES} )
