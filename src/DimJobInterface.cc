@@ -319,7 +319,7 @@ void DimJobInterface::startJobs(const std::string &hostName)
 	for (std::vector<Json::Value>::iterator iter = m_processList.begin(), endIter = m_processList.end() ;
 			endIter != iter ; ++iter)
 	{
-		if (hostName.compare("ALL")==0 || hostName.compare((*iter)["HOST"].asString()) != 0)
+		if (hostName.compare("ALL")!=0 && hostName.compare((*iter)["HOST"].asString()) != 0)
 			continue;
 
 		s0.str("");

@@ -10,7 +10,7 @@ DEAMON_NAME="dimjc_daemon" #Nom du programme (doit être identique à l'exécuta
 PATH="/sbin:/bin:/usr/sbin:/usr/bin" #Ne pas toucher
 
 
-export DIM_DNS_NODE=lyoac30
+export DIM_DNS_NODE=lyoac26
 export DIMDIR=/opt/dhcal/dim
 export LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:/opt/dhcal/lib:${DIMDIR}/linux:$LD_LIBRARY_PATH
 
