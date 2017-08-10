@@ -1,5 +1,5 @@
 
-#include "DimJobControl.h"
+#include "DimDQMJobControl.h"
 #include "fileTailer.hh"
 
 // -- std headers
@@ -158,12 +158,12 @@ std::string processStatus(uint32_t lpid)
 	size_t length = sizeof(kp);
 
 	if (length == 0)
-		return std::string("DimJobControl.cc: syctl::kinfo_proc is empty");
+		return std::string("DimDQMJobControl.cc: syctl::kinfo_proc is empty");
 
 	int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PID, (int)(lpid) };
 
 	if (sysctl(mib, 4, &kp, &length, NULL, 0) < 0)
-		return std::string("DimJobControl.cc: Unknown Value for sysctl");
+		return std::string("DimDQMJobControl.cc: Unknown Value for sysctl");
 
 	int processStatus = kp.kp_proc.p_stat;
 	if (processStatus <= 0) {
@@ -232,9 +232,9 @@ DimProcessData::DimProcessData(const std::string &jsonString)
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 
-DimJobControl::DimJobControl()
+DimDQMJobControl::DimDQMJobControl()
 {
-	std::cout << "Building DimJobControl" << std::endl;
+	std::cout << "Building DimDQMJobControl" << std::endl;
 
 	char hname[80];
 	gethostname(hname, 80);
@@ -256,14 +256,14 @@ DimJobControl::DimJobControl()
 	m_pLogRpc = new LogRpc((char*) s0.str().c_str(), "I:2", "C");
 
 	s0.str("");
-	s0 << "DimJobControl-" << m_hostname;
+	s0 << "DimDQMJobControl-" << m_hostname;
 
 	DimServer::start((char*) s0.str().c_str());
 }
 
 //-------------------------------------------------------------------------------------------------
 
-DimJobControl::~DimJobControl()
+DimDQMJobControl::~DimDQMJobControl()
 {
 	clear();
 
@@ -279,7 +279,7 @@ DimJobControl::~DimJobControl()
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobControl::killProcess(pid_t pid, uint32_t sig)
+void DimDQMJobControl::killProcess(pid_t pid, uint32_t sig)
 {
 	PidToProcessMap::iterator iter = m_processMap.begin();
 
@@ -306,7 +306,7 @@ void DimJobControl::killProcess(pid_t pid, uint32_t sig)
 
 //-------------------------------------------------------------------------------------------------
 
-void::DimJobControl::clear()
+void::DimDQMJobControl::clear()
 {
 	for (PidToProcessMap::iterator iter = m_processMap.begin(), endIter = m_processMap.end() ;
 	     endIter != iter ; ++iter)
@@ -321,7 +321,7 @@ void::DimJobControl::clear()
 
 //-------------------------------------------------------------------------------------------------
 
-std::string DimJobControl::status()
+std::string DimDQMJobControl::status()
 {
 	Json::FastWriter fastWriter;
 	Json::Value fromScratch;
@@ -347,7 +347,7 @@ std::string DimJobControl::status()
 
 //-------------------------------------------------------------------------------------------------
 
-std::string DimJobControl::log(pid_t pid)
+std::string DimDQMJobControl::log(pid_t pid)
 {
 //	// TODO to implement this function
 	std::stringstream s0;
@@ -378,7 +378,7 @@ std::string DimJobControl::log(pid_t pid)
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobControl::allocateCommands()
+void DimDQMJobControl::allocateCommands()
 {
 	std::stringstream s0;
 
@@ -404,7 +404,7 @@ void DimJobControl::allocateCommands()
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobControl::startProcess(DimProcessData* pProcessData)
+void DimDQMJobControl::startProcess(DimProcessData* pProcessData)
 {
 	if (pProcessData->m_status != DimProcessData::NOT_CREATED)
 		return;
@@ -528,7 +528,7 @@ void DimJobControl::startProcess(DimProcessData* pProcessData)
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobControl::commandHandler()
+void DimDQMJobControl::commandHandler()
 {
 	DimCommand *pCommand = getCommand();
 	std::cout << "J'ai recu " << pCommand->getName() << " COMMAND" << std::endl;

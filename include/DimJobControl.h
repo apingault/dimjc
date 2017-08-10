@@ -1,5 +1,5 @@
-#ifndef _DimJobControl_h
-#define _DimJobControl_h
+#ifndef _DimDQMJobControl_h
+#define _DimDQMJobControl_h
 
 // -- std headers
 #include <stdint.h>
@@ -50,21 +50,21 @@ public:
 //-------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  DimJobControl class
+ *  @brief  DimDQMJobControl class
  */
-class DimJobControl: public DimServer
+class DimDQMJobControl: public DimServer
 {
 public:
 	/**
 	 *  @brief  Constructor.
 	 *          Allocate commands and services
 	 */
-	DimJobControl();
+	DimDQMJobControl();
 
 	/**
 	 *  @brief  Destructor
 	 */
-	virtual ~DimJobControl();
+	virtual ~DimDQMJobControl();
 
 	/**
 	 *  @brief  Kill all processes

@@ -1,5 +1,5 @@
 
-#include "DimJobInterface.h"
+#include "DimDQMJobInterface.h"
 #include "fileTailer.hh"
 
 // -- std headers
@@ -18,7 +18,7 @@
 #include <sys/param.h>
 #include <string.h>
 
-DimJobInterface::DimJobInterface() :
+DimDQMJobInterface::DimDQMJobInterface() :
 	DimTimer(),
 	m_timerPeriod(0)
 {
@@ -27,14 +27,14 @@ DimJobInterface::DimJobInterface() :
 
 //-------------------------------------------------------------------------------------------------
 
-DimJobInterface::~DimJobInterface()
+DimDQMJobInterface::~DimDQMJobInterface()
 {
 	pthread_mutex_destroy(&m_mutex);
 }
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobInterface::loadJSON(const std::string &fileName)
+void DimDQMJobInterface::loadJSON(const std::string &fileName)
 {
 	this->clear();
 
@@ -119,7 +119,7 @@ void DimJobInterface::loadJSON(const std::string &fileName)
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobInterface::infoHandler()
+void DimDQMJobInterface::infoHandler()
 {
 	DimInfo *pInfo = getInfo(); // get pInfo DimInfo address
 
@@ -177,7 +177,7 @@ void DimJobInterface::infoHandler()
 
 //-------------------------------------------------------------------------------------------------
 
-std::string DimJobInterface::processJobList() const
+std::string DimDQMJobInterface::processJobList() const
 {
    Json::FastWriter fastWriter;
    return fastWriter.write(m_root);
@@ -185,7 +185,7 @@ std::string DimJobInterface::processJobList() const
 
 //-------------------------------------------------------------------------------------------------
 
-std::string DimJobInterface::processStatusList() const
+std::string DimDQMJobInterface::processStatusList() const
 {
    Json::FastWriter fastWriter;
    return fastWriter.write(m_processArray);
@@ -193,7 +193,7 @@ std::string DimJobInterface::processStatusList() const
 
 //-------------------------------------------------------------------------------------------------
 
-Json::Value DimJobInterface::processStatus(const std::string &hostName) const
+Json::Value DimDQMJobInterface::processStatus(const std::string &hostName) const
 {
 	Json::Value processStatus;
 
@@ -215,21 +215,21 @@ Json::Value DimJobInterface::processStatus(const std::string &hostName) const
 
 //-------------------------------------------------------------------------------------------------
 
-const Json::Value &DimJobInterface::getProcessStatusValue() const
+const Json::Value &DimDQMJobInterface::getProcessStatusValue() const
 {
 	return m_processArray;
 }
 
 //-------------------------------------------------------------------------------------------------
 
-const Json::Value &DimJobInterface::getRoot() const
+const Json::Value &DimDQMJobInterface::getRoot() const
 {
 	return m_root;
 }
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobInterface::list()
+void DimDQMJobInterface::list()
 {
 	std::cout << std::setw(6)  << "\033[1m" << "PID";
 	std::cout << std::setw(15) << "NAME";
@@ -249,7 +249,7 @@ void DimJobInterface::list()
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobInterface::restartJob(const std::string &hostName, const std::string &jobName,
+void DimDQMJobInterface::restartJob(const std::string &hostName, const std::string &jobName,
 		uint32_t pid, uint32_t sig)
 {
 	this->killJob(hostName, pid, sig);
@@ -282,7 +282,7 @@ void DimJobInterface::restartJob(const std::string &hostName, const std::string 
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobInterface::startJob(const std::string &hostName, const std::string &jobName)
+void DimDQMJobInterface::startJob(const std::string &hostName, const std::string &jobName)
 {
 	std::stringstream s0;
 	Json::FastWriter fastWriter;
@@ -311,7 +311,7 @@ void DimJobInterface::startJob(const std::string &hostName, const std::string &j
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobInterface::startJobs(const std::string &hostName)
+void DimDQMJobInterface::startJobs(const std::string &hostName)
 {
   std::stringstream s0;
   Json::FastWriter fastWriter;
@@ -334,7 +334,7 @@ void DimJobInterface::startJobs(const std::string &hostName)
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobInterface::clearHostJobs(const std::string &hostName)
+void DimDQMJobInterface::clearHostJobs(const std::string &hostName)
 {
 	std::stringstream s0;
 	s0 << "/DJCDQM/" << hostName <<"/CLEAR";
@@ -344,7 +344,7 @@ void DimJobInterface::clearHostJobs(const std::string &hostName)
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobInterface::clearAllJobs()
+void DimDQMJobInterface::clearAllJobs()
 {
 	for (std::vector<std::string>::iterator iter = m_djcNames.begin(), endIter = m_djcNames.end() ;
 			endIter != iter ; ++iter)
@@ -358,7 +358,7 @@ void DimJobInterface::clearAllJobs()
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobInterface::status()
+void DimDQMJobInterface::status()
 {
 	pthread_mutex_lock(&m_mutex);
 
@@ -394,7 +394,7 @@ void DimJobInterface::status()
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobInterface::killJob(const std::string &hostName, uint32_t pid, uint32_t sig)
+void DimDQMJobInterface::killJob(const std::string &hostName, uint32_t pid, uint32_t sig)
 {
 	std::stringstream s0;
 	s0 << "/DJCDQM/" << hostName << "/KILL";
@@ -408,7 +408,7 @@ void DimJobInterface::killJob(const std::string &hostName, uint32_t pid, uint32_
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobInterface::startTimer(int nSeconds)
+void DimDQMJobInterface::startTimer(int nSeconds)
 {
 	m_timerPeriod = nSeconds;
 	DimTimer::start(nSeconds);
@@ -416,14 +416,14 @@ void DimJobInterface::startTimer(int nSeconds)
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobInterface::stopTimer()
+void DimDQMJobInterface::stopTimer()
 {
 	DimTimer::stop();
 }
 
 //-------------------------------------------------------------------------------------------------
 
-std::string DimJobInterface::queryLogFile(const std::string &hostName, pid_t pid, const unsigned int nLines)
+std::string DimDQMJobInterface::queryLogFile(const std::string &hostName, pid_t pid, const unsigned int nLines)
 {
 	std::stringstream ss;
 	ss << "/DJCDQM/" << hostName << "/LOGRPC";
@@ -449,7 +449,7 @@ std::string DimJobInterface::queryLogFile(const std::string &hostName, pid_t pid
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobInterface::clear()
+void DimDQMJobInterface::clear()
 {
 	m_root.clear();
 	m_processList.clear();
@@ -465,7 +465,7 @@ void DimJobInterface::clear()
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobInterface::performVariablesReplacement( Json::Value &hostsValue, const Json::Value &vars )
+void DimDQMJobInterface::performVariablesReplacement( Json::Value &hostsValue, const Json::Value &vars )
 {
 	std::vector<std::string> hosts = hostsValue.getMemberNames();
 
@@ -515,7 +515,7 @@ void DimJobInterface::performVariablesReplacement( Json::Value &hostsValue, cons
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobInterface::buildHostVariableMap( const std::string &hostName, const Json::Value &vars , std::map<std::string,std::string> &parameters)
+void DimDQMJobInterface::buildHostVariableMap( const std::string &hostName, const Json::Value &vars , std::map<std::string,std::string> &parameters)
 {
 	if( ! vars["GLOBAL"].empty() )
 	{
@@ -546,7 +546,7 @@ void DimJobInterface::buildHostVariableMap( const std::string &hostName, const J
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobInterface::replace( std::string &targetString, const std::map<std::string,std::string> &variables)
+void DimDQMJobInterface::replace( std::string &targetString, const std::map<std::string,std::string> &variables)
 {
 	for(std::map<std::string, std::string>::const_iterator iter = variables.begin(), endIter = variables.end() ;
 			endIter != iter ; ++iter)
@@ -561,7 +561,7 @@ void DimJobInterface::replace( std::string &targetString, const std::map<std::st
 
 //-------------------------------------------------------------------------------------------------
 
-void DimJobInterface::timerHandler()
+void DimDQMJobInterface::timerHandler()
 {
 	this->status();
 

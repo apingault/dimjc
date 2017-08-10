@@ -59,8 +59,8 @@ ADD_DEFINITIONS("-Wno-long-long -Wreturn-type")
 
 SET(
     SRC_FILES
-    src/DimJobControl.cc
-    src/DimJobInterface.cc
+    src/DimDQMJobControl.cc
+    src/DimDQMJobInterface.cc
     src/fileTailer.cxx
 )
 

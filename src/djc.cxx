@@ -1,10 +1,10 @@
-#include "DimJobControl.h"
+#include "DimDQMJobControl.h"
 #include <unistd.h>
 #include <stdint.h>
 
 int main()
 {
-  DimJobControl* c=new DimJobControl();
+  DimDQMJobControl* c=new DimDQMJobControl();
 
   //s->scandns();
   //getchar();

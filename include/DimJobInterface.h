@@ -1,5 +1,5 @@
-#ifndef _DimJobInterface_h
-#define _DimJobInterface_h
+#ifndef _DimDQMJobInterface_h
+#define _DimDQMJobInterface_h
 
 // -- std headers
 #include <vector>
@@ -13,20 +13,20 @@
 #include "json/json.h"
 
 /**
- *  @brief  DimJobInterface class
+ *  @brief  DimDQMJobInterface class
  */
-class DimJobInterface : public DimClient, private DimTimer
+class DimDQMJobInterface : public DimClient, private DimTimer
 {
 public:
 	/**
 	 *  @brief  Constructor
 	 */
-	DimJobInterface();
+	DimDQMJobInterface();
 
 	/**
 	 *  @brief  Destructor
 	 */
-	~DimJobInterface();
+	~DimDQMJobInterface();
 
 	/**
 	 *  @brief  Load a json file
