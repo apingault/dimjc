@@ -79,6 +79,10 @@ INSTALL(
     RUNTIME DESTINATION bin
 )
 
+install(
+    PROGRAMS etc/dimjcdqmd
+    DESTINATION bin
+ )
 ###############################
 # display some variables and write them to cache
 DISPLAY_STD_VARIABLES()
