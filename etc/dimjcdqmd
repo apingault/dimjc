@@ -1,18 +1,35 @@
 #! /bin/sh -e
 
+envFile="/etc/default/dqm4hepenv"
+[ -f ${envFile} ] && . ${envFile}
+
+if [ -z "$DIM_DNS_NODE" ] ;  then
+  echo "DIM_DNS_NODE is not set, please set it in ${envFile}" >&2
+  exit 1
+fi
+
+if [ -z "$DQM4HEP_DIR" ] ;  then
+  echo "DQM4HEP_DIR is not set, please set it in ${envFile}" >&2
+  exit 1
+fi
+
+if [ -z "$DIM_DIR" ] ;  then
+  echo "DQM4HEP_DIR is not set, please set it in ${envFile}" >&2
+  exit 1
+fi
 
 
-DAEMON="/opt/dhcal/bin/dimjc_daemon" #ligne de commande du programme
+DAEMON="${DQM4HEP_DIR}/bin/dimjc_dqm_daemon" #ligne de commande du programme
 DEAMON_OPT=""  #argument à utiliser par le programme
 DAEMONUSER="root" #utilisateur du programme
-DEAMON_NAME="dimjc_daemon" #Nom du programme (doit être identique à l'exécutable)
+DEAMON_NAME="dimjc_dqm_daemon" #Nom du programme (doit être identique à l'exécutable)
 
 PATH="/sbin:/bin:/usr/sbin:/usr/bin" #Ne pas toucher
 
 
-export DIM_DNS_NODE=lyoac26
-export DIMDIR=/opt/dhcal/dim
-export LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:/opt/dhcal/lib:${DIMDIR}/linux:$LD_LIBRARY_PATH
+# export DIM_DNS_NODE=lyoac29
+# export DIMDIR=/opt/dhcal/dim
+export LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:/opt/dhcal/lib:${DIM_DIR}/linux:$LD_LIBRARY_PATH
 
 test -x $DAEMON || exit 0
 
@@ -20,7 +37,7 @@ test -x $DAEMON || exit 0
 
 d_start () {
         log_daemon_msg "Starting system $DEAMON_NAME Daemon"
-	start-stop-daemon --background --name $DEAMON_NAME --start --quiet --chuid $DAEMONUSER --exec /bin/bash -- -c "$DAEMON > /var/log/dimjc.log 2>&1"
+	start-stop-daemon --background --name $DEAMON_NAME --start --quiet --chuid $DAEMONUSER --exec /bin/bash -- -c "$DAEMON > /var/log/dimjcdqm.log 2>&1"
         log_end_msg $?
 }
 
