@@ -242,17 +242,17 @@ DimJobControl::DimJobControl()
 
 	std::stringstream s0;
 
-	s0 << "/DJC/" << m_hostname << "/JOBSTATUS";
+	s0 << "/DJCDQM/" << m_hostname << "/JOBSTATUS";
 	m_pJobService = new DimService((char *) s0.str().c_str(), (char*) "CREATED");
 
 	s0.str("");
-	s0 << "/DJC/" << m_hostname << "/LOGSTATUS";
+	s0 << "/DJCDQM/" << m_hostname << "/LOGSTATUS";
 	m_pLogService = new DimService((char*) s0.str().c_str(), (char*) "CREATED");
 
 	this->allocateCommands();
 
 	s0.str("");
-	s0 << "/DJC/" << m_hostname << "/LOGRPC";
+	s0 << "/DJCDQM/" << m_hostname << "/LOGRPC";
 	m_pLogRpc = new LogRpc((char*) s0.str().c_str(), "I:2", "C");
 
 	s0.str("");
@@ -382,23 +382,23 @@ void DimJobControl::allocateCommands()
 {
 	std::stringstream s0;
 
-	s0 << "/DJC/" << m_hostname << "/CLEAR";
+	s0 << "/DJCDQM/" << m_hostname << "/CLEAR";
 	m_pClearCommand = new DimCommand(s0.str().c_str(), "I:1", this);
 
 	s0.str("");
-	s0 << "/DJC/" << m_hostname << "/START";
+	s0 << "/DJCDQM/" << m_hostname << "/START";
 	m_pStartCommand = new DimCommand(s0.str().c_str(), "C", this);
 
 	s0.str("");
-	s0 << "/DJC/" << m_hostname << "/KILL";
+	s0 << "/DJCDQM/" << m_hostname << "/KILL";
 	m_pKillCommand = new DimCommand(s0.str().c_str(), "I:2", this);
 
 	s0.str("");
-	s0 << "/DJC/" << m_hostname << "/STATUS";
+	s0 << "/DJCDQM/" << m_hostname << "/STATUS";
 	m_pStatusCommand = new DimCommand(s0.str().c_str(), "I:1", this);
 
 	s0.str("");
-	s0 << "/DJC/" << m_hostname << "/LOG";
+	s0 << "/DJCDQM/" << m_hostname << "/LOG";
 	m_pLogCommand = new DimCommand(s0.str().c_str(), "I:1", this);
 }
 

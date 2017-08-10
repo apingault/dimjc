@@ -91,7 +91,7 @@ void DimJobInterface::loadJSON(const std::string &fileName)
 
 	// Get DB service
 	std::cout<< "Scanning dim DNS" << std::endl;
-	dbr->getServices("/DJC/*/JOBSTATUS" );
+	dbr->getServices("/DJCDQM/*/JOBSTATUS" );
 
 	while(type = dbr->getNextService(service, format))
 	{
@@ -269,7 +269,7 @@ void DimJobInterface::restartJob(const std::string &hostName, const std::string 
 			continue;
 
 		s0.str("");
-		s0 << "/DJC/" << (*iter)["HOST"].asString() << "/START";
+		s0 << "/DJCDQM/" << (*iter)["HOST"].asString() << "/START";
 
 		std::cout << s0.str() << std::endl;
 		std::cout << fastWriter.write((*iter)).c_str() << std::endl;
@@ -298,7 +298,7 @@ void DimJobInterface::startJob(const std::string &hostName, const std::string &j
 			continue;
 
 		s0.str("");
-		s0 << "/DJC/" << (*iter)["HOST"].asString() << "/START";
+		s0 << "/DJCDQM/" << (*iter)["HOST"].asString() << "/START";
 
 		std::cout << s0.str() << std::endl;
 		std::cout << fastWriter.write((*iter)).c_str() << std::endl;
@@ -323,7 +323,7 @@ void DimJobInterface::startJobs(const std::string &hostName)
 			continue;
 
 		s0.str("");
-		s0 << "/DJC/" << (*iter)["HOST"].asString() << "/START";
+		s0 << "/DJCDQM/" << (*iter)["HOST"].asString() << "/START";
 
 		std::cout << s0.str() << std::endl;
 		std::cout << fastWriter.write((*iter)).c_str() << std::endl;
@@ -337,7 +337,7 @@ void DimJobInterface::startJobs(const std::string &hostName)
 void DimJobInterface::clearHostJobs(const std::string &hostName)
 {
 	std::stringstream s0;
-	s0 << "/DJC/" << hostName <<"/CLEAR";
+	s0 << "/DJCDQM/" << hostName <<"/CLEAR";
 
 	DimClient::sendCommand(s0.str().c_str(), (int) 1);
 }
@@ -350,7 +350,7 @@ void DimJobInterface::clearAllJobs()
 			endIter != iter ; ++iter)
 	{
 		std::stringstream s0;
-		s0 << "/DJC/" << (*iter) << "/CLEAR";
+		s0 << "/DJCDQM/" << (*iter) << "/CLEAR";
 
 		DimClient::sendCommand(s0.str().c_str(), (int) 1);
 	}
@@ -384,7 +384,7 @@ void DimJobInterface::status()
 			continue;
 
 		s0.str("");
-		s0 << "/DJC/" << (*djcIter) << "/STATUS";
+		s0 << "/DJCDQM/" << (*djcIter) << "/STATUS";
 
 		DimClient::sendCommand(s0.str().c_str(), (int) 1);
 	}
@@ -397,7 +397,7 @@ void DimJobInterface::status()
 void DimJobInterface::killJob(const std::string &hostName, uint32_t pid, uint32_t sig)
 {
 	std::stringstream s0;
-	s0 << "/DJC/" << hostName << "/KILL";
+	s0 << "/DJCDQM/" << hostName << "/KILL";
 
 	int32_t data[2];
 	data[0] = pid;
@@ -426,7 +426,7 @@ void DimJobInterface::stopTimer()
 std::string DimJobInterface::queryLogFile(const std::string &hostName, pid_t pid, const unsigned int nLines)
 {
 	std::stringstream ss;
-	ss << "/DJC/" << hostName << "/LOGRPC";
+	ss << "/DJCDQM/" << hostName << "/LOGRPC";
 
 	DimRpcInfo info((char*) ss.str().c_str(), (char*)"");
 
