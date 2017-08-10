@@ -71,11 +71,11 @@ INSTALL(
     LIBRARY DESTINATION lib
 )
 
-ADD_EXECUTABLE( dimjc_daemon src/djc.cxx )
-TARGET_LINK_LIBRARIES( dimjc_daemon dimjc )
+ADD_EXECUTABLE( dimjc_dqm_daemon src/djc.cxx )
+TARGET_LINK_LIBRARIES( dimjc_dqm_daemon dimjc )
 
 INSTALL( 
-    TARGETS dimjc_daemon
+    TARGETS dimjc_dqm_daemon
     RUNTIME DESTINATION bin
 )
 
