@@ -14,21 +14,19 @@ if [ -z "$DQM4HEP_DIR" ] ;  then
 fi
 
 if [ -z "$DIM_DIR" ] ;  then
-  echo "DQM4HEP_DIR is not set, please set it in ${envFile}" >&2
+  echo "DIM_DIR is not set, please set it in ${envFile}" >&2
   exit 1
 fi
 
 
-DAEMON="${DQM4HEP_DIR}/bin/dimjc_dqm_daemon" #ligne de commande du programme
+DAEMON="${DQM4HEP_DIR}/bin/dimjcdqm_daemon" #ligne de commande du programme
 DEAMON_OPT=""  #argument à utiliser par le programme
 DAEMONUSER="root" #utilisateur du programme
-DEAMON_NAME="dimjc_dqm_daemon" #Nom du programme (doit être identique à l'exécutable)
+DEAMON_NAME="dimjcdqm_daemon" #Nom du programme (doit être identique à l'exécutable)
 
 PATH="/sbin:/bin:/usr/sbin:/usr/bin" #Ne pas toucher
 
-
-# export DIM_DNS_NODE=lyoac29
-# export DIMDIR=/opt/dhcal/dim
+export DIMDIR=${DIM_DIR}
 export LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:/opt/dhcal/lib:${DIM_DIR}/linux:$LD_LIBRARY_PATH
 
 test -x $DAEMON || exit 0
