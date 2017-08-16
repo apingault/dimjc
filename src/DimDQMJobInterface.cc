@@ -99,7 +99,7 @@ void DimDQMJobInterface::loadJSON(const std::string &fileName)
 		std::string ss = service;
 
 		size_t n = ss.find("/JOBSTATUS");
-		std::string host = ss.substr(0,n).substr(5, n-5);
+		std::string host = ss.substr(0,n).substr(8, n-8);
 
 		if(std::find(hosts.begin(), hosts.end(), host) == hosts.end())
 			continue;
@@ -201,7 +201,7 @@ Json::Value DimDQMJobInterface::processStatus(const std::string &hostName) const
 	{
 		std::string ss = m_jobInfo[i]->getName();
 		size_t n = ss.find("/JOBSTATUS");
-		std::string hname = ss.substr(0,n).substr(5, n-5);
+		std::string hname = ss.substr(0,n).substr(8, n-8);
 
 		if(hname == hostName)
 		{
