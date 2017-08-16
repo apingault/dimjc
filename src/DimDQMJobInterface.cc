@@ -134,7 +134,7 @@ void DimDQMJobInterface::infoHandler()
 
 			std::string ss = m_jobInfo[i]->getName();
 			size_t n = ss.find("/JOBSTATUS");
-			std::string hostName = ss.substr(0,n).substr(5, n-5);
+			std::string hostName = ss.substr(0,n).substr(8, n-8);
 
 			Json::Reader reader;
 			std::string jsonMessage = pInfo->getString();
