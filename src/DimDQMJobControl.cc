@@ -1,6 +1,6 @@
 
 #include "DimDQMJobControl.h"
-#include "fileTailer.hh"
+#include "fileTailer.h"
 
 // -- std headers
 #include <iostream>

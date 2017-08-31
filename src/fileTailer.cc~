@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "fileTailer.h"
+#include "fileTailer.hh"
 
 FileTailer::FileTailer(uint32_t mb) :
 _MAXBUFF(mb)
